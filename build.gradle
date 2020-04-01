@@ -2,7 +2,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.71'
 }
 
-group 'org.example'
+group 'com.github.horitaku1124.kotlin'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -11,15 +11,19 @@ repositories {
 jar {
     manifest {
         attributes(
-                'Main-Class': 'com.github.horitaku1124.kotlin.Main'
+                'Main-Class': 'com.github.horitaku1124.kotlin.sql_minus.Main'
         )
     }
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.5.2"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:5.5.2"
 }
-
+test {
+    useJUnitPlatform()
+}
 compileKotlin {
     kotlinOptions.jvmTarget = 11
 }

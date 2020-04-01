@@ -1,4 +1,4 @@
-package com.github.horitaku1124.kotlin
+package com.github.horitaku1124.kotlin.sql_minus
 
 import java.net.ServerSocket
 

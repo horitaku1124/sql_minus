@@ -1,4 +1,4 @@
-package com.github.horitaku1124.kotlin
+package com.github.horitaku1124.kotlin.sql_minus
 
 import java.net.Socket
 
@@ -18,7 +18,7 @@ class DataBaseServer(private var socket: Socket): java.lang.Thread() {
       if (len < 0) break
 
       var query = String(buf, 0, len)
-      queryParser.parse(query)
+      queryParser.lexicalAnalysis(query)
     }
 
     toLClient.close()
