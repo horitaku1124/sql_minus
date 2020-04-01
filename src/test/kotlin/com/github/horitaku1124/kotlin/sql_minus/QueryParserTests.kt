@@ -86,4 +86,35 @@ class QueryParserTests {
       assertEquals(")", tokens[17])
     }
   }
+  @Test
+  fun basicCreateCanBeParsed() {
+    val qp = QueryParser()
+
+    qp.lexicalAnalysis("create table table1 (\n" +
+        "    id int auto_increment\n" +
+        "        primary key,\n" +
+        "    name varchar(30) null\n" +
+        ");").let { tokens ->
+      println(tokens)
+      assertEquals(18, tokens.size)
+      assertEquals("create", tokens[0])
+      assertEquals("table", tokens[1])
+      assertEquals("table1", tokens[2])
+      assertEquals("(", tokens[3])
+      assertEquals("id", tokens[4])
+      assertEquals("int", tokens[5])
+      assertEquals("auto_increment", tokens[6])
+      assertEquals("primary", tokens[7])
+      assertEquals("key", tokens[8])
+      assertEquals(",", tokens[9])
+      assertEquals("name", tokens[10])
+      assertEquals("varchar", tokens[11])
+      assertEquals("(", tokens[12])
+      assertEquals("30", tokens[13])
+      assertEquals(")", tokens[14])
+      assertEquals("null", tokens[15])
+      assertEquals(")", tokens[16])
+      assertEquals(";", tokens[17])
+    }
+  }
 }
