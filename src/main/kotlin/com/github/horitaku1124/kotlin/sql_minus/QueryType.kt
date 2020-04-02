@@ -2,6 +2,7 @@ package com.github.horitaku1124.kotlin.sql_minus
 
 enum class QueryType {
   CREATE_DATABASE,
+  CHANGE_DATABASE,
   CREATE_TABLE,
   ALTER_TABLE,
   DROP_TABLE,

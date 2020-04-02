@@ -1,5 +1,6 @@
 package com.github.horitaku1124.kotlin.sql_minus
 
+import com.github.horitaku1124.kotlin.sql_minus.QueryType.CHANGE_DATABASE
 import com.github.horitaku1124.kotlin.sql_minus.QueryType.CREATE_DATABASE
 import java.lang.RuntimeException
 
@@ -16,12 +17,16 @@ class Tokenizer {
         if (objective == "database") {
           syntax = SyntaxTree(CREATE_DATABASE)
         } else {
-          throw RuntimeException("error")
+          throw RuntimeException("unrecognized command => $objective")
         }
         var subject = tokens[index++]
         syntax.subject.add(subject)
-      } else {
-        throw RuntimeException("error")
+      } else if (startToken == "connect") {
+        syntax = SyntaxTree(CHANGE_DATABASE)
+        var subject = tokens[index++].toLowerCase()
+        syntax.subject.add(subject)
+      } else  {
+        throw RuntimeException("unrecognized command => $startToken")
       }
       while (index < tokens.size) {
         val token = tokens[index++]

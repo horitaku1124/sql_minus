@@ -13,28 +13,38 @@ class DataBaseServer(private var socket: Socket): java.lang.Thread() {
   }
   override fun run() {
     val buf = ByteArray(1024 * 1024)
-    var fromClient = socket.getInputStream()
-    var toLClient = socket.getOutputStream()
+    val fromClient = socket.getInputStream()
+    val toLClient = socket.getOutputStream()
+    val strToClient = { str:String ->
+      toLClient.write(str.toByteArray())
+    }
 
-    var queryParser = QueryParser()
-    var tokenizer = Tokenizer()
+    val queryParser = QueryParser()
+    val tokenizer = Tokenizer()
+    val session = ClientSession()
     while(true) {
-      toLClient.write("DB>".toByteArray())
-      var len = fromClient.read(buf)
+
+      strToClient(session.getCurrentDatabase().orElse("*") + ">")
+      val len = fromClient.read(buf)
       if (len < 0) break
 
       println("< " + len)
 
-      var query = String(buf, 0, len)
-      var tokens = queryParser.lexicalAnalysis(query)
-      var syntaxList = tokenizer.parse(tokens)
+      val query = String(buf, 0, len)
+      if (query.trim() == "exit") {
+        strToClient("Bye.\n")
+        break
+      }
 
       try {
+        val tokens = queryParser.lexicalAnalysis(query)
+        val syntaxList = tokenizer.parse(tokens)
+
         syntaxList.forEach {syntax ->
-          dbEngine.execute(syntax)
+          dbEngine.execute(syntax, session)
         }
       } catch (e: RuntimeException) {
-        toLClient.write(("ERROR:" + e.message!! + "\n").toByteArray())
+        strToClient("ERROR:" + e.message!! + "\n")
       }
     }
 

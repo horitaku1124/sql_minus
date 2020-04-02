@@ -27,3 +27,6 @@ hs_err_pid*
 build/
 
 !gradle/wrapper/gradle-wrapper.jar
+
+*.iml
+.DS_Store
