@@ -10,4 +10,5 @@ enum class QueryType {
   INSERT_QUERY,
   UPDATE_QUERY,
   DELETE_QUERY,
+  SHOW_TABLES,
 }

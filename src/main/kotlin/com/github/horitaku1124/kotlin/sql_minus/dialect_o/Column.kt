@@ -1,6 +1,6 @@
 package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
-class Column {
+class Column: java.io.Serializable {
   lateinit var name:String
   lateinit var type:Type
 

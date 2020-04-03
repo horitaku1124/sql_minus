@@ -4,7 +4,7 @@ class QueryParser {
   private val symbols = listOf('+', '-', '/', '*', '=','<', '>')
   fun lexicalAnalysis(query: String): List<String> {
     val verseList = arrayListOf<String>()
-    var verse = "";
+    var verse = ""
     var quote: Char? = null
     var inOneLineComment = false
 

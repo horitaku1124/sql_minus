@@ -1,6 +1,7 @@
 package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
 import com.github.horitaku1124.kotlin.sql_minus.QueryParser
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.CreateTableRecipe
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

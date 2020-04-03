@@ -2,6 +2,7 @@ package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
 import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.CreateTableRecipe
 import java.lang.RuntimeException
 import java.util.*
 
@@ -28,8 +29,14 @@ class Tokenizer {
         }
       } else if (startToken == "connect") {
         syntax = SyntaxTree(CHANGE_DATABASE)
-        var subject = tokens[index++].toLowerCase()
-        syntax.subject = subject
+        syntax.subject = tokens[index++].toLowerCase()
+      } else if (startToken == "show") {
+        val objective = tokens[index++].toLowerCase()
+        if (objective == "tables") {
+          syntax = SyntaxTree(SHOW_TABLES)
+        } else {
+          throw RuntimeException("unrecognized command => $objective")
+        }
       } else  {
         throw RuntimeException("unrecognized command => $startToken")
       }
@@ -52,7 +59,7 @@ class Tokenizer {
     if (parenthesis != "(") {
       throw RuntimeException("error")
     }
-    val recipe = CreateTableRecipe()
+    val recipe = CreateTableRecipe(syntax.subject)
     while (index < tokens.size) {
       val columnParts = arrayListOf<String>()
       while (index < tokens.size) {

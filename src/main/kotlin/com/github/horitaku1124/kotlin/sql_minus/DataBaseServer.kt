@@ -7,7 +7,7 @@ import java.net.Socket
 
 class DataBaseServer(private var socket: Socket): java.lang.Thread() {
   companion object {
-    private lateinit var dbEngine: DatabaseEngine
+    private var dbEngine: DatabaseEngine
     init {
       println("DataBaseServer.init()")
       dbEngine = DatabaseEngine()
@@ -43,9 +43,13 @@ class DataBaseServer(private var socket: Socket): java.lang.Thread() {
         val syntaxList = tokenizer.parse(tokens)
 
         syntaxList.forEach {syntax ->
-          dbEngine.execute(syntax, session)
+          val result = dbEngine.execute(syntax, session)
+          if (!result.isEmpty()) {
+            strToClient(result)
+          }
         }
       } catch (e: RuntimeException) {
+        e.printStackTrace()
         strToClient("ERROR:" + e.message!! + "\n")
       }
     }
