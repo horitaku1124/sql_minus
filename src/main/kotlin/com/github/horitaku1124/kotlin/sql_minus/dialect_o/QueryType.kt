@@ -1,4 +1,4 @@
-package com.github.horitaku1124.kotlin.sql_minus
+package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
 enum class QueryType {
   CREATE_DATABASE,

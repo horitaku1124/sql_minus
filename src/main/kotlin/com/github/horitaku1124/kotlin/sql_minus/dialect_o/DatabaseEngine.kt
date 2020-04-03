@@ -1,10 +1,11 @@
-package com.github.horitaku1124.kotlin.sql_minus
+package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
-import com.github.horitaku1124.kotlin.sql_minus.QueryType.CHANGE_DATABASE
-import com.github.horitaku1124.kotlin.sql_minus.QueryType.CREATE_DATABASE
+import com.github.horitaku1124.kotlin.sql_minus.ClientSession
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.CHANGE_DATABASE
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.CREATE_DATABASE
+import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
 import java.io.File
 import java.lang.RuntimeException
-import java.util.*
 
 class DatabaseEngine {
   private val DB_PATH = "./db_files"
@@ -14,10 +15,10 @@ class DatabaseEngine {
     session: ClientSession
   ) {
     if (syntax.type == CREATE_DATABASE) {
-      createDatabase(syntax.subject[0])
+      createDatabase(syntax.subject)
     }
     if (syntax.type == CHANGE_DATABASE) {
-      changeDatabase(session, syntax.subject[0])
+      changeDatabase(session, syntax.subject)
     }
   }
 
