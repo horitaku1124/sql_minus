@@ -1,9 +1,9 @@
 package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
+import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
 import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.CreateTableRecipe
-import java.lang.RuntimeException
 import java.util.*
 
 class Tokenizer {
@@ -25,7 +25,7 @@ class Tokenizer {
           syntax = ret.first
           index = ret.second
         } else {
-          throw RuntimeException("unrecognized command => $objective")
+          throw DBRuntimeException("unrecognized command => $objective")
         }
       } else if (startToken == "connect") {
         syntax = SyntaxTree(CHANGE_DATABASE)
@@ -35,10 +35,10 @@ class Tokenizer {
         if (objective == "tables") {
           syntax = SyntaxTree(SHOW_TABLES)
         } else {
-          throw RuntimeException("unrecognized command => $objective")
+          throw DBRuntimeException("unrecognized command => $objective")
         }
       } else  {
-        throw RuntimeException("unrecognized command => $startToken")
+        throw DBRuntimeException("unrecognized command => $startToken")
       }
       while (index < tokens.size) {
         val token = tokens[index++]
@@ -57,7 +57,7 @@ class Tokenizer {
     syntax.subject = tokens[index++]
     val parenthesis = tokens[index++]
     if (parenthesis != "(") {
-      throw RuntimeException("error")
+      throw DBRuntimeException("error")
     }
     val recipe = CreateTableRecipe(syntax.subject)
     while (index < tokens.size) {

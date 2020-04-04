@@ -1,6 +1,7 @@
 package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
 import com.github.horitaku1124.kotlin.sql_minus.ClientSession
+import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
 import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.journals.TableJournal
@@ -45,7 +46,7 @@ class DatabaseEngine {
   fun createDatabase(session: ClientSession, databaseName: String): String {
     val dbFile = File(DB_PATH + "/" + databaseName)
     if (dbFile.exists()) {
-      throw RuntimeException("db already exists")
+      throw DBRuntimeException("db already exists")
     }
     println("createDatabase -> " + databaseName)
     dbFile.mkdir()
@@ -61,7 +62,7 @@ class DatabaseEngine {
   fun changeDatabase(session: ClientSession, databaseName: String): String {
     val dbFile = File(DB_PATH + "/" + databaseName)
     if (!dbFile.exists()) {
-      throw RuntimeException("db doesn't exist")
+      throw DBRuntimeException("db doesn't exist")
     }
     println("change Database to -> $databaseName")
     session.setCurrentDatabase(databaseName)
@@ -77,7 +78,7 @@ class DatabaseEngine {
     val tableName = recipe.name
     val tableNames = session.dbInfo.tables.map { t -> t.name }
     if (tableNames.contains(tableName)) {
-      throw RuntimeException("table already exists")
+      throw DBRuntimeException("table already exists")
     }
     val table = TableJournal(tableName)
     table.columns.addAll(recipe.columns) // TODO to deep copy
