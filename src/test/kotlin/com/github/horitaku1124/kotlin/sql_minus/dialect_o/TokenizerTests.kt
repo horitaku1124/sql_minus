@@ -1,7 +1,9 @@
 package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
+import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.QueryParser
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.CreateTableRecipe
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.InsertIntoRecipe
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -59,9 +61,32 @@ class TokenizerTests {
           assertEquals(1, createTable.columns.size)
           createTable.columns[0].let { idColumns ->
             assertEquals("id", idColumns.name)
-            assertEquals(Column.Type.INT, idColumns.type)
+            assertEquals(ColumnType.INT, idColumns.type)
           }
         }
+      }
+    }
+  }
+  @Test
+  fun basicQuery4CanBeParsed() {
+    val sql = "insert into tb1(id) values (123)"
+
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      val st = tn.parse(tokens)
+
+      assertEquals(1, st.size)
+      st[0].let { syntax ->
+        assertEquals("tb1", syntax.subject)
+        val recipe = syntax.recipe.get() as InsertIntoRecipe
+
+        assertEquals(1, recipe.columns.size)
+        assertEquals("id", recipe.columns[0])
+        assertEquals(1, recipe.records.size)
+        assertEquals(1, recipe.records[0].cells.size)
+        assertEquals(ColumnType.INT, recipe.records[0].cells[0].type)
+        assertEquals("123", recipe.records[0].cells[0].value)
       }
     }
   }

@@ -13,7 +13,7 @@ class ClientSession {
   fun setCurrentDatabase(value: String) {
     currentDatabase = Optional.of(value)
   }
-  lateinit var dbInfo: DatabaseInformation
+  var dbInfo: DatabaseInformation? = null
 
   lateinit var dbPath: Path
 }
