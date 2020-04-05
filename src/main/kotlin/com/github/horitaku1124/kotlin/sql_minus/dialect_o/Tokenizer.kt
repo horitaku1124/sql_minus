@@ -14,31 +14,40 @@ class Tokenizer {
     while (index < tokens.size) {
       var startToken = tokens[index++].toLowerCase()
       var syntax: SyntaxTree
-      if (startToken == "create") {
-        val objective = tokens[index++].toLowerCase()
-        if (objective == "database") {
-          syntax = SyntaxTree(CREATE_DATABASE)
-          val subject = tokens[index++]
-          syntax.subject = subject
-        } else if (objective == "table") {
-          val ret = parseCreateTable(tokens, index)
-          syntax = ret.first
-          index = ret.second
-        } else {
-          throw DBRuntimeException("unrecognized command => $objective")
+      when (startToken) {
+        "create" -> {
+          val objective = tokens[index++].toLowerCase()
+          when (objective) {
+            "database" -> {
+              syntax = SyntaxTree(CREATE_DATABASE)
+              val subject = tokens[index++]
+              syntax.subject = subject
+            }
+            "table" -> {
+              val ret = parseCreateTable(tokens, index)
+              syntax = ret.first
+              index = ret.second
+            }
+            else -> {
+              throw DBRuntimeException("unrecognized command => $objective")
+            }
+          }
         }
-      } else if (startToken == "connect") {
-        syntax = SyntaxTree(CHANGE_DATABASE)
-        syntax.subject = tokens[index++].toLowerCase()
-      } else if (startToken == "show") {
-        val objective = tokens[index++].toLowerCase()
-        if (objective == "tables") {
-          syntax = SyntaxTree(SHOW_TABLES)
-        } else {
-          throw DBRuntimeException("unrecognized command => $objective")
+        "connect" -> {
+          syntax = SyntaxTree(CHANGE_DATABASE)
+          syntax.subject = tokens[index++].toLowerCase()
         }
-      } else  {
-        throw DBRuntimeException("unrecognized command => $startToken")
+        "show" -> {
+          val objective = tokens[index++].toLowerCase()
+          if (objective == "tables") {
+            syntax = SyntaxTree(SHOW_TABLES)
+          } else {
+            throw DBRuntimeException("unrecognized command => $objective")
+          }
+        }
+        else -> {
+          throw DBRuntimeException("unrecognized command => $startToken")
+        }
       }
       while (index < tokens.size) {
         val token = tokens[index++]
