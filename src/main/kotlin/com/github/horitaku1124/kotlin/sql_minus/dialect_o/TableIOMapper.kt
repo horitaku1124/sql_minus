@@ -6,7 +6,8 @@ import java.io.File
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 
-class TableIOMapper(var tableJournal: TableJournal, var filePath: String): AutoCloseable {
+class TableIOMapper(private var tableJournal: TableJournal,
+                    private var filePath: String): AutoCloseable {
   private val ReservedLength = 4
   private val RecordLength: Int
   init {
@@ -14,6 +15,8 @@ class TableIOMapper(var tableJournal: TableJournal, var filePath: String): AutoC
     tableJournal.columns.forEach { col ->
       if (col.type == ColumnType.INT) {
         recordLength += 4
+      } else if (col.type == ColumnType.VARCHAR) {
+        recordLength += col.length!!
       }
     }
     RecordLength = recordLength
@@ -22,15 +25,15 @@ class TableIOMapper(var tableJournal: TableJournal, var filePath: String): AutoC
   }
 
   fun insert(columns: List<String>, record: Record) {
-    var map = HashMap<String, RecordCell>()
+    val map = HashMap<String, RecordCell>()
 
     for (i in columns.indices) {
-      var col = columns[i]
-      var cell = record.cells[i]
-      map.put(col, cell)
+      val col = columns[i]
+      val cell = record.cells[i]
+      map[col] = cell
     }
 
-    var buffer = ByteBuffer.allocate(RecordLength)
+    val buffer = ByteBuffer.allocate(RecordLength)
     buffer.putInt(12345)
     tableJournal.columns.forEach { col ->
       var cell: RecordCell? = null
@@ -43,12 +46,18 @@ class TableIOMapper(var tableJournal: TableJournal, var filePath: String): AutoC
         } else {
           buffer.putInt(cell.value.toInt())
         }
+      } else if (col.type == ColumnType.VARCHAR) {
+        if (cell == null) {
+          buffer.position(buffer.position() + col.length!!)
+        } else {
+          buffer.put(cell.value.toByteArray())
+        }
       }
     }
     val position = File(filePath).length()
     println("position=" + position)
 
-    var array = buffer.array()
+    val array = buffer.array()
     println("buffer=" + array.size)
 
     RandomAccessFile(File(filePath), "rw").use { ro ->

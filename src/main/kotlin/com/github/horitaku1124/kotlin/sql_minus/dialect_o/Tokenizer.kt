@@ -80,13 +80,29 @@ class Tokenizer {
     val recipe = CreateTableRecipe(syntax.subject)
     while (index < tokens.size) {
       val columnParts = arrayListOf<String>()
+      var partsInParen = arrayListOf<String>()
+      var insideParenthesis = false
       while (index < tokens.size) {
         val part = tokens[index++]
-        if (part == ",") {
-          break
-        }
-        if (part == ")") {
-          break
+        if (insideParenthesis) {
+          if (part == ")") {
+            insideParenthesis = false
+          } else if (part == ",") {
+            continue
+          } else {
+            partsInParen.add(part)
+          }
+        } else {
+          if (part == ")") {
+            break
+          }
+          if (part == ",") {
+            break
+          }
+          if (part == "(") {
+            insideParenthesis = true
+            continue
+          }
         }
         columnParts.add(part)
       }
@@ -95,6 +111,14 @@ class Tokenizer {
       val type = columnParts[1].toLowerCase()
       if (type == "int") {
         col.type = ColumnType.INT
+      } else if (type == "varchar") {
+        col.type = ColumnType.VARCHAR
+        if (partsInParen.isEmpty()) {
+          throw DBRuntimeException("inside parenthesis must not empty")
+        }
+        if (partsInParen.size == 1) {
+          col.length = partsInParen[0].toInt()
+        }
       }
       recipe.columns.add(col)
     }
@@ -133,7 +157,11 @@ class Tokenizer {
         if (value == ")") break
         if (value == ",") continue
 
-        record.cells.add(RecordCell(ColumnType.INT, value))
+        if (value.startsWith("'")) {
+          record.cells.add(RecordCell(ColumnType.VARCHAR, value.substring(1, value.length - 1)))
+        } else {
+          record.cells.add(RecordCell(ColumnType.INT, value))
+        }
       }
 
       records.add(record)
