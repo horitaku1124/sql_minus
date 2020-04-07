@@ -6,6 +6,7 @@ import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.CreateTableRecipe
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.InsertIntoRecipe
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.SelectQueryRecipe
 import java.util.*
 
 class Tokenizer {
@@ -51,6 +52,11 @@ class Tokenizer {
             throw DBRuntimeException("unrecognized command => $objective")
           }
           val ret = parseInsertTable(tokens, index)
+          syntax = ret.first
+          index = ret.second
+        }
+        "select" -> {
+          val ret = parseSelect(tokens, index)
           syntax = ret.first
           index = ret.second
         }
@@ -170,6 +176,37 @@ class Tokenizer {
     recipe.columns = columns
     recipe.records = records
     syntax.recipe = Optional.of(recipe)
+
+    return Pair(syntax, index)
+  }
+
+  private fun parseSelect(tokens: List<String>, startIndex: Int): Pair<SyntaxTree, Int>  {
+    val syntax = SyntaxTree(SELECT_QUERY)
+    var index = startIndex
+    var selectParts = arrayListOf<String>()
+    var token = tokens[index++]
+    var nextToken: String? = null
+    while (index < tokens.size) {
+      selectParts.add(token)
+      val next = tokens[index++]
+      if (next == ",") {
+        token = tokens[index++]
+        continue
+      }
+      nextToken = next
+      break
+    }
+    if (nextToken == null || nextToken.toLowerCase() != "from") {
+      throw DBRuntimeException("no from syntax")
+    }
+    val fromParts = arrayListOf<String>()
+    fromParts.add(tokens[index++])
+
+    val selectRecipe = SelectQueryRecipe()
+    selectRecipe.selectParts = selectParts
+    selectRecipe.fromParts = fromParts
+
+    syntax.recipe = Optional.of(selectRecipe)
 
     return Pair(syntax, index)
   }

@@ -7,6 +7,7 @@ import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.journals.TableJournal
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.CreateTableRecipe
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.InsertIntoRecipe
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.SelectQueryRecipe
 import com.github.horitaku1124.kotlin.sql_minus.utils.StringUtil
 import java.io.*
 import java.nio.file.Files
@@ -45,6 +46,10 @@ class DatabaseEngine {
     if (syntax.type == CREATE_TABLE) {
       val recipe = syntax.recipe.get() as CreateTableRecipe
       return createTable(recipe, session)
+    }
+    if (syntax.type == SELECT_QUERY) {
+      var recipe = syntax.recipe.get() as SelectQueryRecipe
+      return selectQuery(session, recipe)
     }
 
     return "Error:"
@@ -135,5 +140,36 @@ class DatabaseEngine {
     }
 
     return "OK\n"
+  }
+
+  private fun selectQuery(session: ClientSession, recipe: SelectQueryRecipe): String {
+    if (session.dbInfo == null) {
+      throw DBRuntimeException("DB is not selected")
+    }
+    val dbInfo = session.dbInfo!!
+
+    val selectParts = recipe.selectParts
+    val fromParts = recipe.fromParts
+    var tableName = fromParts[0]
+
+    var result = dbInfo.tables.filter { tb ->
+      tb.name == tableName
+    }
+    if (result.isEmpty()) {
+      throw DBRuntimeException("table doesn't exist -> ${tableName}")
+    }
+    var table = result[0]
+
+    val tableFile = session.dbPath.resolve(table.fileName).toFile()
+    if (!tableFile.exists()) {
+      throw DBRuntimeException("table journal is gone")
+    }
+    println(tableFile.absolutePath)
+
+    var result2: List<Record>
+    TableIOMapper(table, tableFile.absolutePath).use { tableMapper ->
+      result2 = tableMapper.select(selectParts)
+    }
+    return ""
   }
 }

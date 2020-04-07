@@ -4,6 +4,7 @@ import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.QueryParser
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.CreateTableRecipe
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.InsertIntoRecipe
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.SelectQueryRecipe
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -145,6 +146,25 @@ class TokenizerTests {
         assertEquals("123", recipe.records[0].cells[0].value)
         assertEquals(ColumnType.VARCHAR, recipe.records[0].cells[1].type)
         assertEquals("abcde", recipe.records[0].cells[1].value)
+      }
+    }
+  }
+  @Test
+  fun selectCanBeParsed() {
+    val sql = "select * from tb2"
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      println(tokens)
+      val st = tn.parse(tokens)
+      assertEquals(1, st.size)
+      st[0].let { syntax ->
+        val recipe = syntax.recipe.get() as SelectQueryRecipe
+
+        assertEquals(1, recipe.selectParts.size)
+        assertEquals("*", recipe.selectParts[0])
+        assertEquals(1, recipe.fromParts.size)
+        assertEquals("tb2", recipe.fromParts[0])
       }
     }
   }

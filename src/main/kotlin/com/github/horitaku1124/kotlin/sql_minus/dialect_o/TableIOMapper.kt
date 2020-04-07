@@ -65,4 +65,39 @@ class TableIOMapper(private var tableJournal: TableJournal,
       ro.write(array)
     }
   }
+
+  fun select(columns: List<String>): List<Record> {
+    var list = arrayListOf<Record>()
+    RandomAccessFile(File(filePath), "rw").use { ro ->
+      var buf = ByteArray(RecordLength)
+
+      while(true) {
+        var len = ro.read(buf)
+        if (len < 0) break
+
+        var bytes = ByteBuffer.wrap(buf)
+        bytes.position(ReservedLength)
+        println(len)
+        var record = Record()
+
+        tableJournal.columns.forEach { col ->
+          var cell: RecordCell
+
+          if (col.type == ColumnType.INT) {
+            cell = RecordCell(ColumnType.INT, bytes.getInt().toString())
+          } else if (col.type == ColumnType.VARCHAR) {
+            var buf2 = ByteArray(col.length!!)
+            bytes.get(buf2)
+
+            cell = RecordCell(ColumnType.VARCHAR, String(buf2))
+          } else {
+            cell = RecordCell(ColumnType.NULL, "")
+          }
+          record.cells.add(cell)
+        }
+        list.add(record)
+      }
+    }
+    return list
+  }
 }
