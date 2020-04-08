@@ -150,15 +150,15 @@ class DatabaseEngine {
 
     val selectParts = recipe.selectParts
     val fromParts = recipe.fromParts
-    var tableName = fromParts[0]
+    val tableName = fromParts[0]
 
-    var result = dbInfo.tables.filter { tb ->
+    val result = dbInfo.tables.filter { tb ->
       tb.name == tableName
     }
     if (result.isEmpty()) {
       throw DBRuntimeException("table doesn't exist -> ${tableName}")
     }
-    var table = result[0]
+    val table = result[0]
 
     val tableFile = session.dbPath.resolve(table.fileName).toFile()
     if (!tableFile.exists()) {
@@ -168,8 +168,23 @@ class DatabaseEngine {
 
     val sb = StringBuffer()
     TableIOMapper(table, tableFile.absolutePath).use { tableMapper ->
-      for (col in tableMapper.columns()) {
-        sb.append(col.name)
+      val columns = tableMapper.columns()
+      val shows = arrayListOf<Int>()
+      if (selectParts.size == 1 && selectParts[0] == "*") {
+        for (i in columns.indices) {
+          shows.add(i)
+        }
+      } else {
+        for (i in 0 until columns.size) {
+          var name = columns[i].name
+          if (selectParts.contains(name)) {
+            val index = selectParts.indexOf(name)
+            shows.add(index)
+          }
+        }
+      }
+      for (i in shows) {
+        sb.append(columns[i].name)
         sb.append('\t')
       }
       sb.append('\n')
@@ -177,8 +192,9 @@ class DatabaseEngine {
       sb.append('\n')
       val result2 = tableMapper.select(selectParts)
       for(record in result2) {
-        for (cell in record.cells) {
-          sb.append(cell.value).append('\t')
+        for (i in shows) {
+          sb.append(record.cells[i].value)
+          sb.append('\t')
         }
         sb.append('\n')
       }

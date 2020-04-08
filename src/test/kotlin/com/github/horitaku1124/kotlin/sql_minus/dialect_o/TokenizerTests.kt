@@ -150,7 +150,7 @@ class TokenizerTests {
     }
   }
   @Test
-  fun selectCanBeParsed() {
+  fun select1CanBeParsed() {
     val sql = "select * from tb2"
     val qp = QueryParser()
     val tn = Tokenizer()
@@ -165,6 +165,26 @@ class TokenizerTests {
         assertEquals("*", recipe.selectParts[0])
         assertEquals(1, recipe.fromParts.size)
         assertEquals("tb2", recipe.fromParts[0])
+      }
+    }
+  }
+  @Test
+  fun select2CanBeParsed() {
+    val sql = "select id,name from tb3"
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      println(tokens)
+      val st = tn.parse(tokens)
+      assertEquals(1, st.size)
+      st[0].let { syntax ->
+        val recipe = syntax.recipe.get() as SelectQueryRecipe
+
+        assertEquals(2, recipe.selectParts.size)
+        assertEquals("id", recipe.selectParts[0])
+        assertEquals("name", recipe.selectParts[1])
+        assertEquals(1, recipe.fromParts.size)
+        assertEquals("tb3", recipe.fromParts[0])
       }
     }
   }
