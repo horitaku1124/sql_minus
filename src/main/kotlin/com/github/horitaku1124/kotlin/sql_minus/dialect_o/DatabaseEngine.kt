@@ -166,10 +166,23 @@ class DatabaseEngine {
     }
     println(tableFile.absolutePath)
 
-    var result2: List<Record>
+    val sb = StringBuffer()
     TableIOMapper(table, tableFile.absolutePath).use { tableMapper ->
-      result2 = tableMapper.select(selectParts)
+      for (col in tableMapper.columns()) {
+        sb.append(col.name)
+        sb.append('\t')
+      }
+      sb.append('\n')
+      sb.append("-".repeat(20))
+      sb.append('\n')
+      val result2 = tableMapper.select(selectParts)
+      for(record in result2) {
+        for (cell in record.cells) {
+          sb.append(cell.value).append('\t')
+        }
+        sb.append('\n')
+      }
     }
-    return ""
+    return sb.toString()
   }
 }

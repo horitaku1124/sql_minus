@@ -66,30 +66,42 @@ class TableIOMapper(private var tableJournal: TableJournal,
     }
   }
 
+  fun columns(): List<Column> {
+    val list = arrayListOf<Column>()
+    list.addAll(tableJournal.columns)
+    return list
+  }
+
   fun select(columns: List<String>): List<Record> {
-    var list = arrayListOf<Record>()
+    val list = arrayListOf<Record>()
     RandomAccessFile(File(filePath), "rw").use { ro ->
-      var buf = ByteArray(RecordLength)
+      val buf = ByteArray(RecordLength)
 
       while(true) {
-        var len = ro.read(buf)
+        val len = ro.read(buf)
         if (len < 0) break
 
-        var bytes = ByteBuffer.wrap(buf)
+        val bytes = ByteBuffer.wrap(buf)
         bytes.position(ReservedLength)
-        println(len)
-        var record = Record()
+        val record = Record()
 
         tableJournal.columns.forEach { col ->
-          var cell: RecordCell
+          val cell: RecordCell
 
           if (col.type == ColumnType.INT) {
-            cell = RecordCell(ColumnType.INT, bytes.getInt().toString())
+            cell = RecordCell(ColumnType.INT, bytes.int.toString())
           } else if (col.type == ColumnType.VARCHAR) {
-            var buf2 = ByteArray(col.length!!)
+            val buf2 = ByteArray(col.length!!)
             bytes.get(buf2)
+            var strLen = 0
+            for (i in buf2.indices) {
+              strLen = i
+              if (buf2[i] == 0.toByte()) {
+                break
+              }
+            }
 
-            cell = RecordCell(ColumnType.VARCHAR, String(buf2))
+            cell = RecordCell(ColumnType.VARCHAR, String(buf2, 0, strLen))
           } else {
             cell = RecordCell(ColumnType.NULL, "")
           }
