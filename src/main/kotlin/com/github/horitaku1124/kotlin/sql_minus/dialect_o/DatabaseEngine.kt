@@ -133,7 +133,7 @@ class DatabaseEngine {
     }
     println(tableFile.absolutePath)
 
-    TableIOMapper(table, tableFile.absolutePath).use { tableMapper ->
+    TableFileMapper(table, tableFile.absolutePath).use { tableMapper ->
       records.forEach { record ->
         tableMapper.insert(columns, record)
       }
@@ -167,7 +167,7 @@ class DatabaseEngine {
     println(tableFile.absolutePath)
 
     val sb = StringBuffer()
-    TableIOMapper(table, tableFile.absolutePath).use { tableMapper ->
+    TableFileMapper(table, tableFile.absolutePath).use { tableMapper ->
       val columns = tableMapper.columns()
       val shows = arrayListOf<Int>()
       if (selectParts.size == 1 && selectParts[0] == "*") {
@@ -176,7 +176,7 @@ class DatabaseEngine {
         }
       } else {
         for (i in 0 until columns.size) {
-          var name = columns[i].name
+          val name = columns[i].name
           if (selectParts.contains(name)) {
             val index = selectParts.indexOf(name)
             shows.add(index)

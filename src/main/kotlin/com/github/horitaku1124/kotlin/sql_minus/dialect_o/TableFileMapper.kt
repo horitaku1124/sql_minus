@@ -1,13 +1,14 @@
 package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
 import com.github.horitaku1124.kotlin.sql_minus.ColumnType
+import com.github.horitaku1124.kotlin.sql_minus.TableMapper
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.journals.TableJournal
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 
-class TableIOMapper(private var tableJournal: TableJournal,
-                    private var filePath: String): AutoCloseable {
+class TableFileMapper(private var tableJournal: TableJournal,
+                      private var filePath: String): TableMapper {
   private val ReservedLength = 4
   private val RecordLength: Int
   init {
@@ -24,7 +25,7 @@ class TableIOMapper(private var tableJournal: TableJournal,
   override fun close() {
   }
 
-  fun insert(columns: List<String>, record: Record) {
+  override fun insert(columns: List<String>, record: Record) {
     val map = HashMap<String, RecordCell>()
 
     for (i in columns.indices) {
@@ -66,13 +67,13 @@ class TableIOMapper(private var tableJournal: TableJournal,
     }
   }
 
-  fun columns(): List<Column> {
+  override fun columns(): List<Column> {
     val list = arrayListOf<Column>()
     list.addAll(tableJournal.columns)
     return list
   }
 
-  fun select(columns: List<String>): List<Record> {
+  override fun select(columns: List<String>): List<Record> {
     val list = arrayListOf<Record>()
     RandomAccessFile(File(filePath), "rw").use { ro ->
       val buf = ByteArray(RecordLength)
