@@ -6,12 +6,11 @@ import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
 import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.journals.TableJournal
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.CreateTableRecipe
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.InsertIntoRecipe
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.SelectQueryRecipe
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.*
 import com.github.horitaku1124.kotlin.sql_minus.utils.StringUtil
 import java.io.*
 import java.nio.file.Files
+import java.util.function.Predicate
 
 class DatabaseEngine {
   private val DB_PATH = "./db_files"
@@ -28,11 +27,9 @@ class DatabaseEngine {
       return changeDatabase(session, syntax.subject)
     }
     if (syntax.type == SHOW_TABLES) {
-      if (session.dbInfo == null) {
-        throw DBRuntimeException("DB is not selected")
-      }
+      val dbInfo = chooseDatabase(session)
       val sb = StringBuffer()
-      if (session.dbInfo!!.tables.isEmpty()) {
+      if (dbInfo.tables.isEmpty()) {
         sb.append("no tables\n")
       } else {
         session.dbInfo!!.tables.forEach { tb ->
@@ -91,11 +88,8 @@ class DatabaseEngine {
   }
 
   private fun createTable(session: ClientSession, recipe: CreateTableRecipe): String {
+    val dbInfo = chooseDatabase(session)
     val tableName = recipe.name
-    if (session.dbInfo == null) {
-      throw DBRuntimeException("DB is not selected")
-    }
-    val dbInfo = session.dbInfo!!
     val tableNames = dbInfo.tables.map { t -> t.name }
     if (tableNames.contains(tableName)) {
       throw DBRuntimeException("table already exists")
@@ -117,10 +111,7 @@ class DatabaseEngine {
   }
 
   private fun dropTable(session: ClientSession, tableName: String): String {
-    if (session.dbInfo == null) {
-      throw DBRuntimeException("DB is not selected")
-    }
-    val dbInfo = session.dbInfo!!
+    val dbInfo = chooseDatabase(session)
     val tableInfo = dbInfo.tables.find { t -> t.name == tableName}
         ?: throw DBRuntimeException("table doesn't exist")
     dbInfo.tables.remove(tableInfo)
@@ -131,20 +122,17 @@ class DatabaseEngine {
   }
 
   private fun insertInto(session: ClientSession, recipe: InsertIntoRecipe): String {
+    val dbInfo = chooseDatabase(session)
     val columns = recipe.columns
     val records = recipe.records
-    if (session.dbInfo == null) {
-      throw DBRuntimeException("DB is not selected")
-    }
-    val dbInfo = session.dbInfo!!
 
-    var result = dbInfo.tables.filter { tb ->
+    val result = dbInfo.tables.filter { tb ->
       tb.name == recipe.name
     }
     if (result.isEmpty()) {
       throw DBRuntimeException("table doesn't exist -> ${recipe.name}")
     }
-    var table = result[0]
+    val table = result[0]
     val tableFile = session.dbPath.resolve(table.fileName).toFile()
     if (!tableFile.exists()) {
       throw DBRuntimeException("table journal is gone")
@@ -161,10 +149,7 @@ class DatabaseEngine {
   }
 
   private fun selectQuery(session: ClientSession, recipe: SelectQueryRecipe): String {
-    if (session.dbInfo == null) {
-      throw DBRuntimeException("DB is not selected")
-    }
-    val dbInfo = session.dbInfo!!
+    val dbInfo = chooseDatabase(session)
 
     val selectParts = recipe.selectParts
     val fromParts = recipe.fromParts
@@ -211,7 +196,13 @@ class DatabaseEngine {
       sb.append('\n')
       val result2 = tableMapper.select(selectParts)
       var result3 = arrayListOf<Record>()
-      for(record in result2) {
+      var compiled = compileWhere(columns, recipe.whereTree)
+      for (record in result2) {
+        if (compiled.isSatisfied(record)) {
+          result3.add(record)
+        }
+      }
+      for(record in result3) {
         for (i in shows) {
           var cell = record.cells[i]
           if (cell.type == ColumnType.VARCHAR) {
@@ -225,5 +216,30 @@ class DatabaseEngine {
       }
     }
     return sb.toString()
+  }
+
+  private fun chooseDatabase(session: ClientSession): DatabaseInformation {
+    if (session.dbInfo == null) {
+      throw DBRuntimeException("DB is not selected")
+    }
+    return session.dbInfo!!
+  }
+
+  private fun compileWhere(columns: List<Column>, recipe: WhereRecipes): WhereVerifyGate {
+    if (recipe.expression.size == 3) {
+      val colName = recipe.expression[0]
+      var colIndex = -1
+      for (i in 0 until columns.size) {
+        if (columns[i].name == colName) {
+          colIndex = i
+          break
+        }
+      }
+      return WhereVerifyGate.andRule(colIndex, recipe.expression[1], recipe.expression[2])
+    } else {
+      return WhereVerifyGate(Predicate<Record> {
+        true
+      })
+    }
   }
 }
