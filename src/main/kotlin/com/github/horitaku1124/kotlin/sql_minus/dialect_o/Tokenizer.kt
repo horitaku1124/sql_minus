@@ -7,6 +7,7 @@ import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.CreateTableRecipe
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.InsertIntoRecipe
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.SelectQueryRecipe
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.WhereRecipes
 import java.util.*
 
 class Tokenizer {
@@ -125,6 +126,8 @@ class Tokenizer {
         if (partsInParen.size == 1) {
           col.length = partsInParen[0].toInt()
         }
+      } else if (type == "smallint") {
+        col.type = ColumnType.SMALLINT
       }
       recipe.columns.add(col)
     }
@@ -203,6 +206,26 @@ class Tokenizer {
     fromParts.add(tokens[index++])
 
     val selectRecipe = SelectQueryRecipe()
+    while (index < tokens.size) {
+      var remainNum = tokens.size - index
+      if (remainNum > 0) {
+        nextToken = tokens[index++]
+        if (nextToken.toLowerCase() == "where") {
+          remainNum--
+          if (remainNum > 2) {
+            var subject = tokens[index++]
+            var operator = tokens[index++]
+            var objective = tokens[index++]
+            remainNum = remainNum - 3
+            selectRecipe.whereTree.expression.add(subject)
+            selectRecipe.whereTree.expression.add(operator)
+            selectRecipe.whereTree.expression.add(objective)
+          }
+        }
+      }
+      break
+    }
+
     selectRecipe.selectParts = selectParts
     selectRecipe.fromParts = fromParts
 

@@ -18,6 +18,8 @@ class TableFileMapper(private var tableJournal: TableJournal,
         recordLength += 4
       } else if (col.type == ColumnType.VARCHAR) {
         recordLength += col.length!!
+      } else if (col.type == ColumnType.SMALLINT) {
+        recordLength += 2
       }
     }
     RecordLength = recordLength
@@ -45,13 +47,21 @@ class TableFileMapper(private var tableJournal: TableJournal,
         if (cell == null) {
           buffer.putInt(0)
         } else {
-          buffer.putInt(cell.value.toInt())
+          buffer.putInt(cell.intValue!!)
         }
       } else if (col.type == ColumnType.VARCHAR) {
         if (cell == null) {
           buffer.position(buffer.position() + col.length!!)
         } else {
-          buffer.put(cell.value.toByteArray())
+          val bytes = cell.textValue!!.toByteArray()
+          buffer.put(bytes)
+          buffer.position(buffer.position() + col.length!! - bytes.size)
+        }
+      } else if (col.type == ColumnType.SMALLINT) {
+        if (cell == null) {
+          buffer.putShort(0)
+        } else {
+          buffer.putShort(cell.intValue!!.toShort())
         }
       }
     }
@@ -103,6 +113,8 @@ class TableFileMapper(private var tableJournal: TableJournal,
             }
 
             cell = RecordCell(ColumnType.VARCHAR, String(buf2, 0, strLen))
+          } else if (col.type == ColumnType.SMALLINT) {
+            cell = RecordCell(ColumnType.SMALLINT, bytes.getShort().toString())
           } else {
             cell = RecordCell(ColumnType.NULL, "")
           }

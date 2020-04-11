@@ -1,6 +1,7 @@
 package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
 import com.github.horitaku1124.kotlin.sql_minus.ClientSession
+import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
 import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
@@ -167,6 +168,7 @@ class DatabaseEngine {
     println(tableFile.absolutePath)
 
     val sb = StringBuffer()
+    // TODO make it loose couple
     TableFileMapper(table, tableFile.absolutePath).use { tableMapper ->
       val columns = tableMapper.columns()
       val shows = arrayListOf<Int>()
@@ -191,9 +193,15 @@ class DatabaseEngine {
       sb.append("-".repeat(20))
       sb.append('\n')
       val result2 = tableMapper.select(selectParts)
+      var result3 = arrayListOf<Record>()
       for(record in result2) {
         for (i in shows) {
-          sb.append(record.cells[i].value)
+          var cell = record.cells[i]
+          if (cell.type == ColumnType.VARCHAR) {
+            sb.append(cell.textValue)
+          } else {
+            sb.append(cell.intValue!!.toInt())
+          }
           sb.append('\t')
         }
         sb.append('\n')

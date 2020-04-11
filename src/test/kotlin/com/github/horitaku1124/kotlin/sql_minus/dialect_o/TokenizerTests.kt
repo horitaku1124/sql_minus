@@ -88,7 +88,7 @@ class TokenizerTests {
         assertEquals(1, recipe.records.size)
         assertEquals(1, recipe.records[0].cells.size)
         assertEquals(ColumnType.INT, recipe.records[0].cells[0].type)
-        assertEquals("123", recipe.records[0].cells[0].value)
+        assertEquals(123, recipe.records[0].cells[0].intValue)
       }
     }
   }
@@ -143,9 +143,9 @@ class TokenizerTests {
         assertEquals(1, recipe.records.size)
         assertEquals(2, recipe.records[0].cells.size)
         assertEquals(ColumnType.INT, recipe.records[0].cells[0].type)
-        assertEquals("123", recipe.records[0].cells[0].value)
+        assertEquals(123, recipe.records[0].cells[0].intValue)
         assertEquals(ColumnType.VARCHAR, recipe.records[0].cells[1].type)
-        assertEquals("abcde", recipe.records[0].cells[1].value)
+        assertEquals("abcde", recipe.records[0].cells[1].textValue)
       }
     }
   }
@@ -185,6 +185,30 @@ class TokenizerTests {
         assertEquals("name", recipe.selectParts[1])
         assertEquals(1, recipe.fromParts.size)
         assertEquals("tb3", recipe.fromParts[0])
+      }
+    }
+  }
+  @Test
+  fun select3CanBeParsed() {
+    val sql = "select id,name from tb3 where status = 1"
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      println(tokens)
+      val st = tn.parse(tokens)
+      assertEquals(1, st.size)
+      st[0].let { syntax ->
+        val recipe = syntax.recipe.get() as SelectQueryRecipe
+
+        assertEquals(2, recipe.selectParts.size)
+        assertEquals("id", recipe.selectParts[0])
+        assertEquals("name", recipe.selectParts[1])
+        assertEquals(1, recipe.fromParts.size)
+        assertEquals("tb3", recipe.fromParts[0])
+        assertEquals(3, recipe.whereTree.expression.size)
+        assertEquals("status", recipe.whereTree.expression[0])
+        assertEquals("=", recipe.whereTree.expression[1])
+        assertEquals("1", recipe.whereTree.expression[2])
       }
     }
   }
