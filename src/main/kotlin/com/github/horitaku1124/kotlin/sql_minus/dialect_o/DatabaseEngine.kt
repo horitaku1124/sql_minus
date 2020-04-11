@@ -46,10 +46,13 @@ class DatabaseEngine {
     }
     if (syntax.type == CREATE_TABLE) {
       val recipe = syntax.recipe.get() as CreateTableRecipe
-      return createTable(recipe, session)
+      return createTable(session, recipe)
+    }
+    if (syntax.type == DROP_TABLE) {
+      return dropTable(session, syntax.subject)
     }
     if (syntax.type == SELECT_QUERY) {
-      var recipe = syntax.recipe.get() as SelectQueryRecipe
+      val recipe = syntax.recipe.get() as SelectQueryRecipe
       return selectQuery(session, recipe)
     }
 
@@ -87,7 +90,7 @@ class DatabaseEngine {
     return "change Database to -> ${databaseName}\n"
   }
 
-  private fun createTable(recipe: CreateTableRecipe, session: ClientSession): String {
+  private fun createTable(session: ClientSession, recipe: CreateTableRecipe): String {
     val tableName = recipe.name
     if (session.dbInfo == null) {
       throw DBRuntimeException("DB is not selected")
@@ -109,6 +112,20 @@ class DatabaseEngine {
     fileMapper.writeData(path.toFile(), dbInfo)
 
     Files.createFile(session.dbPath.resolve(table.fileName))
+
+    return "ok\n"
+  }
+
+  private fun dropTable(session: ClientSession, tableName: String): String {
+    if (session.dbInfo == null) {
+      throw DBRuntimeException("DB is not selected")
+    }
+    val dbInfo = session.dbInfo!!
+    val tableInfo = dbInfo.tables.find { t -> t.name == tableName}
+        ?: throw DBRuntimeException("table doesn't exist")
+    dbInfo.tables.remove(tableInfo)
+
+    Files.delete(session.dbPath.resolve(tableInfo.fileName))
 
     return "ok\n"
   }

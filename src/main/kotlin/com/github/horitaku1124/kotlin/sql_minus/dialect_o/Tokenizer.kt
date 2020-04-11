@@ -61,6 +61,16 @@ class Tokenizer {
           syntax = ret.first
           index = ret.second
         }
+        "drop" -> {
+          val objective = tokens[index++].toLowerCase()
+          if (objective == "table") {
+            syntax = SyntaxTree(DROP_TABLE)
+            val subject = tokens[index++]
+            syntax.subject = subject
+          } else {
+            throw DBRuntimeException("unrecognized command => $objective")
+          }
+        }
         else -> {
           throw DBRuntimeException("unrecognized command => $startToken")
         }
