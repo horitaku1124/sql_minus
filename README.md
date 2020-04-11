@@ -1,6 +1,9 @@
 SQL Minus
 ----------------
 
+
+[![CircleCI](https://circleci.com/gh/horitaku1124/sql_minus.svg?style=svg)](https://circleci.com/gh/horitaku1124/sql_minus)
+
 ### Requirement
 
 - Java11 or above
