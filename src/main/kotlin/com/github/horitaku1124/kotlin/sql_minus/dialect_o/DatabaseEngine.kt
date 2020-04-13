@@ -65,9 +65,12 @@ class DatabaseEngine {
     dbFile.mkdir()
 
     val dbInfo = DatabaseInformation()
-    val path = dbFile.toPath().resolve("db.info")
+    dbInfo.name = databaseName
+//    val path = dbFile.toPath().resolve("db.info")
+    val path2 = dbFile.toPath().resolve("db.info.yaml")
 
-    fileMapper.writeData(path.toFile(), dbInfo)
+//    fileMapper.writeData(path.toFile(), dbInfo)
+    fileMapper.writeDataYaml(path2.toFile(), dbInfo)
     session.dbPath = dbFile.toPath()
     return "created database -> ${databaseName}\n"
   }
@@ -80,8 +83,10 @@ class DatabaseEngine {
     println("change Database to -> $databaseName")
     session.setCurrentDatabase(databaseName)
 
-    val path = dbFile.toPath().resolve("db.info")
-    session.dbInfo = fileMapper.readData(path.toFile())
+//    val path = dbFile.toPath().resolve("db.info")
+    val path2 = dbFile.toPath().resolve("db.info.yaml")
+//    session.dbInfo = fileMapper.readData(path.toFile())
+    session.dbInfo = fileMapper.readDataYaml(path2.toFile())
 
     session.dbPath = dbFile.toPath()
     return "change Database to -> ${databaseName}\n"
@@ -101,9 +106,10 @@ class DatabaseEngine {
     val hash = StringUtil.hash(tableName)
     table.fileName = hash + "_" + tableName
 
-
-    val path = session.dbPath.resolve("db.info")
-    fileMapper.writeData(path.toFile(), dbInfo)
+//    val path = session.dbPath.resolve("db.info")
+    val path2 = session.dbPath.resolve("db.info.yaml")
+//    fileMapper.writeData(path.toFile(), dbInfo)
+    fileMapper.writeDataYaml(path2.toFile(), dbInfo)
 
     Files.createFile(session.dbPath.resolve(table.fileName))
 
@@ -117,6 +123,11 @@ class DatabaseEngine {
     dbInfo.tables.remove(tableInfo)
 
     Files.delete(session.dbPath.resolve(tableInfo.fileName))
+
+//    val path = session.dbPath.resolve("db.info")
+    val path2 = session.dbPath.resolve("db.info.yaml")
+//    fileMapper.writeData(path.toFile(), dbInfo)
+    fileMapper.writeDataYaml(path2.toFile(), dbInfo)
 
     return "ok\n"
   }

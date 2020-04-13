@@ -26,7 +26,7 @@ download [GraalVM20](https://www.graalvm.org/downloads/)
 
 ```bash
 ~/graalvm-ce-java11-20.0.0/Contents/Home/bin/gu install native-image
-~/graalvm-ce-java11-20.0.0/Contents/Home/bin/native-image -jar build/libs/*.jar
+~/graalvm-ce-java11-20.0.0/Contents/Home/bin/native-image --no-fallback -jar build/libs/*.jar
 ```
 
 ### Native Run
