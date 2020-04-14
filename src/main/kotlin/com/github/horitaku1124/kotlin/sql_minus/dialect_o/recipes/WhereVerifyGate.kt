@@ -23,7 +23,43 @@ class WhereVerifyGate(private var filter: Predicate<Record>) {
 
             } else {
 //              println(" is => " + cell.intValue + " = " + intValue)
-              if (cell.intValue == intValue) {
+              if (cell.intValue == null) {
+                return false
+              } else if (cell.intValue == intValue) {
+                return true
+              }
+            }
+            return false
+          }
+        })
+      } else if (operator == "<") {
+        return WhereVerifyGate(object: Predicate<Record>{
+          override fun test(record: Record) : Boolean {
+            val cell = record.cells[subjectIndex]
+            if (objectIsStr) {
+
+            } else {
+//              println(" is => " + cell.intValue + " = " + intValue)
+              if (cell.intValue == null) {
+                return false
+              } else if (cell.intValue!! < intValue!!) {
+                return true
+              }
+            }
+            return false
+          }
+        })
+      } else if (operator == ">") {
+        return WhereVerifyGate(object: Predicate<Record>{
+          override fun test(record: Record) : Boolean {
+            val cell = record.cells[subjectIndex]
+            if (objectIsStr) {
+
+            } else {
+//              println(" is => " + cell.intValue + " = " + intValue)
+              if (cell.intValue == null) {
+                return false
+              } else if (cell.intValue!! > intValue!!) {
                 return true
               }
             }
