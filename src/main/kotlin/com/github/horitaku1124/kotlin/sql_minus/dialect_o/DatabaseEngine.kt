@@ -5,6 +5,8 @@ import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
 import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.io_mapper.FileMapper
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.io_mapper.*
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.journals.TableJournal
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.*
 import com.github.horitaku1124.kotlin.sql_minus.utils.StringUtil
@@ -14,7 +16,8 @@ import java.util.function.Predicate
 
 class DatabaseEngine {
   private val DB_PATH = "./db_files"
-  private var fileMapper = ObjectFileMapper()
+//  private var fileMapper: FileMapper<DatabaseInformation> = JavaObjectMapper()
+  private var fileMapper: FileMapper<DatabaseInformation> = YamlFileMapper()
 
   fun execute(
     syntax: SyntaxTree,
@@ -66,11 +69,9 @@ class DatabaseEngine {
 
     val dbInfo = DatabaseInformation()
     dbInfo.name = databaseName
-//    val path = dbFile.toPath().resolve("db.info")
-    val path2 = dbFile.toPath().resolve("db.info.yaml")
+    val path = dbFile.toPath().resolve("db.info")
 
-//    fileMapper.writeData(path.toFile(), dbInfo)
-    fileMapper.writeDataYaml(path2.toFile(), dbInfo)
+    fileMapper.storeObject(path.toFile(), dbInfo)
     session.dbPath = dbFile.toPath()
     return "created database -> ${databaseName}\n"
   }
@@ -83,10 +84,8 @@ class DatabaseEngine {
     println("change Database to -> $databaseName")
     session.setCurrentDatabase(databaseName)
 
-//    val path = dbFile.toPath().resolve("db.info")
-    val path2 = dbFile.toPath().resolve("db.info.yaml")
-//    session.dbInfo = fileMapper.readData(path.toFile())
-    session.dbInfo = fileMapper.readDataYaml(path2.toFile())
+    val path = dbFile.toPath().resolve("db.info")
+    session.dbInfo = fileMapper.loadObject(path.toFile())
 
     session.dbPath = dbFile.toPath()
     return "change Database to -> ${databaseName}\n"
@@ -106,10 +105,8 @@ class DatabaseEngine {
     val hash = StringUtil.hash(tableName)
     table.fileName = hash + "_" + tableName
 
-//    val path = session.dbPath.resolve("db.info")
-    val path2 = session.dbPath.resolve("db.info.yaml")
-//    fileMapper.writeData(path.toFile(), dbInfo)
-    fileMapper.writeDataYaml(path2.toFile(), dbInfo)
+    val path = session.dbPath.resolve("db.info")
+    fileMapper.storeObject(path.toFile(), dbInfo)
 
     Files.createFile(session.dbPath.resolve(table.fileName))
 
@@ -124,10 +121,8 @@ class DatabaseEngine {
 
     Files.delete(session.dbPath.resolve(tableInfo.fileName))
 
-//    val path = session.dbPath.resolve("db.info")
-    val path2 = session.dbPath.resolve("db.info.yaml")
-//    fileMapper.writeData(path.toFile(), dbInfo)
-    fileMapper.writeDataYaml(path2.toFile(), dbInfo)
+    val path = session.dbPath.resolve("db.info")
+    fileMapper.storeObject(path.toFile(), dbInfo)
 
     return "ok\n"
   }
