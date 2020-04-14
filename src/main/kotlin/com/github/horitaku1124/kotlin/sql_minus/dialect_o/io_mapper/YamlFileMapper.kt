@@ -52,13 +52,13 @@ class YamlFileMapper: FileMapper<DatabaseInformation> {
     return dbInfo
   }
 
-  override fun storeObject(file: File, dbInfo: DatabaseInformation) {
+  override fun storeObject(file: File, obj: DatabaseInformation) {
     FileOutputStream(file).use { os ->
       val sb = StringBuffer()
-      sb.append("name: " + dbInfo.name).append("\n")
+      sb.append("name: " + obj.name).append("\n")
       sb.append("\n")
 
-      dbInfo.tables.forEach {tb ->
+      obj.tables.forEach {tb ->
         sb.append("- table: " + tb.name).append("\n")
         sb.append("  fileName: " + tb.fileName).append("\n")
         tb.columns.forEach {col ->

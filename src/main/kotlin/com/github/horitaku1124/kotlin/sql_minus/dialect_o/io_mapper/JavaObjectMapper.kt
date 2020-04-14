@@ -12,10 +12,10 @@ class JavaObjectMapper: FileMapper<DatabaseInformation> {
     }
   }
 
-  override fun storeObject(file: File, dbInfo: DatabaseInformation) {
+  override fun storeObject(file: File, obj: DatabaseInformation) {
     FileOutputStream(file).use { fo ->
       ObjectOutputStream(fo).use { ow ->
-        ow.writeObject(dbInfo)
+        ow.writeObject(obj)
       }
     }
   }
