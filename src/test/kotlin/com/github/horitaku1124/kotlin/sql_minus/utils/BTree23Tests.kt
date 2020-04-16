@@ -74,4 +74,17 @@ class BTree23Tests {
     assertEquals(9, root.findObj(9).get())
     assertEquals(11, root.findObj(11).get())
   }
+  @Test
+  fun findObjValuePair() {
+    val compare: (Pair<Int, String?>, Pair<Int, String?>) -> Int = {
+        left, right ->  left.first - right.first
+    }
+    val root = BTree23(compare)
+    var val1 = Pair(1, "A")
+    var look1 = Pair(1, null)
+    assertEquals(false, root.contains(look1))
+    root.insert(val1)
+    assertEquals(true, root.contains(look1))
+    assertEquals("A", root.findObj(look1).get().second)
+  }
 }
