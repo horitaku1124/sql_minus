@@ -1,12 +1,9 @@
 package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
-import com.github.horitaku1124.kotlin.sql_minus.ClientSession
-import com.github.horitaku1124.kotlin.sql_minus.ColumnType
-import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
-import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
+import com.github.horitaku1124.kotlin.sql_minus.*
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.io_mapper.FileMapper
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.io_mapper.*
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.io_mapper.YamlFileMapper
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.journals.TableJournal
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.*
 import com.github.horitaku1124.kotlin.sql_minus.utils.StringUtil
@@ -14,7 +11,7 @@ import java.io.*
 import java.nio.file.Files
 import java.util.function.Predicate
 
-class DatabaseEngine {
+class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
   private val DB_PATH = "./db_files"
 //  private var fileMapper: FileMapper<DatabaseInformation> = JavaObjectMapper()
   private var fileMapper: FileMapper<DatabaseInformation> = YamlFileMapper()
@@ -149,7 +146,7 @@ class DatabaseEngine {
     }
     println(tableFile.absolutePath)
 
-    TableFileMapper(table, tableFile.absolutePath).use { tableMapper ->
+    tableMapper.build(table, tableFile.absolutePath).use { tableMapper ->
       records.forEach { record ->
         tableMapper.insert(columns, record)
       }
@@ -181,7 +178,7 @@ class DatabaseEngine {
 
     val sb = StringBuffer()
     // TODO make it loose couple
-    TableFileMapper(table, tableFile.absolutePath).use { tableMapper ->
+    tableMapper.build(table, tableFile.absolutePath).use { tableMapper ->
       val columns = tableMapper.columns()
       val shows = arrayListOf<Int>()
       if (selectParts.size == 1 && selectParts[0] == "*") {
@@ -253,7 +250,7 @@ class DatabaseEngine {
     }
 
     // TODO make it loose couple
-    TableFileMapper(table, tableFile.absolutePath).use { tableMapper ->
+    tableMapper.build(table, tableFile.absolutePath).use { tableMapper ->
       val columns = tableMapper.columns()
 
       val result2 = tableMapper.select(listOf())
