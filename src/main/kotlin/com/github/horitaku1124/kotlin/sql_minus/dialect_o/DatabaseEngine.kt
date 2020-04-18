@@ -55,6 +55,10 @@ class DatabaseEngine {
       val recipe = syntax.recipe.get() as SelectQueryRecipe
       return selectQuery(session, recipe)
     }
+    if (syntax.type == UPDATE_QUERY) {
+      val recipe = syntax.recipe.get() as UpdateQueryRecipe
+      return updateQuery(session, recipe)
+    }
 
     return "Error:"
   }
@@ -222,6 +226,72 @@ class DatabaseEngine {
       }
     }
     return sb.toString()
+  }
+
+  private fun updateQuery(session: ClientSession, recipe: UpdateQueryRecipe): String {
+    val dbInfo = chooseDatabase(session)
+    val tableName = recipe.targetTable
+    val updates = recipe.updates
+
+    val result = dbInfo.tables.filter { tb ->
+      tb.name == tableName
+    }
+    if (result.isEmpty()) {
+      throw DBRuntimeException("table doesn't exist -> ${tableName}")
+    }
+    val table = result[0]
+
+    val tableFile = session.dbPath.resolve(table.fileName).toFile()
+    if (!tableFile.exists()) {
+      throw DBRuntimeException("table journal is gone")
+    }
+    println(tableFile.absolutePath)
+
+    val columnToUpdate = hashMapOf<String, UpdatesRecipe>()
+    for (upd in updates) {
+      columnToUpdate[upd.expression[0]] = upd
+    }
+
+    // TODO make it loose couple
+    TableFileMapper(table, tableFile.absolutePath).use { tableMapper ->
+      val columns = tableMapper.columns()
+
+      val result2 = tableMapper.select(listOf())
+      var result3 = arrayListOf<Record>()
+      var compiled = compileWhere(columns, recipe.whereTree[0])
+      for (record in result2) {
+        if (compiled.isSatisfied(record)) {
+          result3.add(record)
+        }
+      }
+
+      var updateCount = 0
+      for (record in result3) {
+        var updated = false
+        for (i in columns.indices) {
+          val col = columns[i]
+          if (columnToUpdate.containsKey(col.name)) {
+            val updateRecipe = columnToUpdate[col.name]!!
+            val expression = updateRecipe.expression
+            if (expression[1] == "=") {
+              val value = expression[2]
+              val cell = record.cells[i]
+              if (cell.type == ColumnType.INT || cell.type == ColumnType.SMALLINT) {
+                cell.intValue = value.toInt()
+              } else {
+                cell.textValue = value
+              }
+            }
+            updated = true
+          }
+        }
+        tableMapper.update(record)
+        if (updated) {
+          updateCount++
+        }
+      }
+      return "${updateCount} records updated\n"
+    }
   }
 
   private fun chooseDatabase(session: ClientSession): DatabaseInformation {

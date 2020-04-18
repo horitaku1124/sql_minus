@@ -5,6 +5,7 @@ import com.github.horitaku1124.kotlin.sql_minus.QueryParser
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.CreateTableRecipe
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.InsertIntoRecipe
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.SelectQueryRecipe
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.UpdateQueryRecipe
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -209,6 +210,23 @@ class TokenizerTests {
         assertEquals("status", recipe.whereTree.expression[0])
         assertEquals("=", recipe.whereTree.expression[1])
         assertEquals("1", recipe.whereTree.expression[2])
+      }
+    }
+  }
+
+  @Test
+  fun updateCanBeParsed() {
+    val sql = "update tb3 set status = 3 where status = 1"
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      println(tokens)
+      val st = tn.parse(tokens)
+      assertEquals(1, st.size)
+
+      st[0].let { syntax ->
+        val recipe = syntax.recipe.get() as UpdateQueryRecipe
+        assertEquals("tb3", recipe.targetTable)
       }
     }
   }

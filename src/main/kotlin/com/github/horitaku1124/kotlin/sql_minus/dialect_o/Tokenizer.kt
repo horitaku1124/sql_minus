@@ -4,10 +4,7 @@ import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
 import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.CreateTableRecipe
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.InsertIntoRecipe
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.SelectQueryRecipe
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.WhereRecipes
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.*
 import java.util.*
 
 class Tokenizer {
@@ -70,6 +67,11 @@ class Tokenizer {
           } else {
             throw DBRuntimeException("unrecognized command => $objective")
           }
+        }
+        "update" -> {
+          val ret = parseUpdate(tokens, index)
+          syntax = ret.first
+          index = ret.second
         }
         else -> {
           throw DBRuntimeException("unrecognized command => $startToken")
@@ -241,6 +243,52 @@ class Tokenizer {
 
     syntax.recipe = Optional.of(selectRecipe)
 
+    return Pair(syntax, index)
+  }
+
+  private fun parseUpdate(tokens: List<String>, startIndex: Int): Pair<SyntaxTree, Int> {
+    var recipe = UpdateQueryRecipe()
+    var index = startIndex
+    val syntax = SyntaxTree(UPDATE_QUERY)
+    recipe.targetTable = tokens[index++]
+
+    if (tokens[index++] != "set") {
+      throw DBRuntimeException("no set syntax")
+    }
+
+    while (index < tokens.size) {
+      var token = tokens[index++]
+      if (token == ",") {
+        continue
+      }
+      if (token == "where") {
+        break
+      }
+      var subject = token
+      var ope = tokens[index++]
+      var objective = tokens[index++]
+      var upd = UpdatesRecipe()
+      upd.expression.add(subject)
+      upd.expression.add(ope)
+      upd.expression.add(objective)
+
+      recipe.updates.add(upd)
+    }
+
+    while (index < tokens.size) {
+      var subject = tokens[index++]
+      var ope = tokens[index++]
+      var objective = tokens[index++]
+
+      var where = WhereRecipes()
+      where.expression.add(subject)
+      where.expression.add(ope)
+      where.expression.add(objective)
+
+      recipe.whereTree.add(where)
+    }
+
+    syntax.recipe = Optional.of(recipe)
     return Pair(syntax, index)
   }
 }

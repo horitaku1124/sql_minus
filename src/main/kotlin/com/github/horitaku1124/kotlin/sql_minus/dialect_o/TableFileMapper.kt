@@ -27,6 +27,39 @@ class TableFileMapper(private var tableJournal: TableJournal,
   override fun close() {
   }
 
+  private fun recordToBinary(map: HashMap<String, RecordCell>): ByteBuffer {
+    val recordBuffer = ByteBuffer.allocate(RecordLength)
+    recordBuffer.putInt(12345)
+    tableJournal.columns.forEach { col ->
+      var cell: RecordCell? = null
+      if (map.containsKey(col.name)) {
+        cell = map[col.name]
+      }
+      if (col.type == ColumnType.INT) {
+        if (cell == null) {
+          recordBuffer.putInt(0)
+        } else {
+          recordBuffer.putInt(cell.intValue!!)
+        }
+      } else if (col.type == ColumnType.VARCHAR) {
+        if (cell == null) {
+          recordBuffer.position(recordBuffer.position() + col.length!!)
+        } else {
+          val bytes = cell.textValue!!.toByteArray()
+          recordBuffer.put(bytes)
+          recordBuffer.position(recordBuffer.position() + col.length!! - bytes.size)
+        }
+      } else if (col.type == ColumnType.SMALLINT) {
+        if (cell == null) {
+          recordBuffer.putShort(0)
+        } else {
+          recordBuffer.putShort(cell.intValue!!.toShort())
+        }
+      }
+    }
+    return recordBuffer
+  }
+
   override fun insert(columns: List<String>, record: Record) {
     val map = HashMap<String, RecordCell>()
 
@@ -36,39 +69,11 @@ class TableFileMapper(private var tableJournal: TableJournal,
       map[col] = cell
     }
 
-    val buffer = ByteBuffer.allocate(RecordLength)
-    buffer.putInt(12345)
-    tableJournal.columns.forEach { col ->
-      var cell: RecordCell? = null
-      if (map.containsKey(col.name)) {
-        cell = map[col.name]
-      }
-      if (col.type == ColumnType.INT) {
-        if (cell == null) {
-          buffer.putInt(0)
-        } else {
-          buffer.putInt(cell.intValue!!)
-        }
-      } else if (col.type == ColumnType.VARCHAR) {
-        if (cell == null) {
-          buffer.position(buffer.position() + col.length!!)
-        } else {
-          val bytes = cell.textValue!!.toByteArray()
-          buffer.put(bytes)
-          buffer.position(buffer.position() + col.length!! - bytes.size)
-        }
-      } else if (col.type == ColumnType.SMALLINT) {
-        if (cell == null) {
-          buffer.putShort(0)
-        } else {
-          buffer.putShort(cell.intValue!!.toShort())
-        }
-      }
-    }
     val position = File(filePath).length()
     println("position=" + position)
 
-    val array = buffer.array()
+    val recordBuffer = recordToBinary(map)
+    val array = recordBuffer.array()
     println("buffer=" + array.size)
 
     RandomAccessFile(File(filePath), "rw").use { ro ->
@@ -87,23 +92,25 @@ class TableFileMapper(private var tableJournal: TableJournal,
     val list = arrayListOf<Record>()
     RandomAccessFile(File(filePath), "rw").use { ro ->
       val buf = ByteArray(RecordLength)
+      var filePosition = 0L
 
       while(true) {
         val len = ro.read(buf)
         if (len < 0) break
 
-        val bytes = ByteBuffer.wrap(buf)
-        bytes.position(ReservedLength)
+        val recordBuff = ByteBuffer.wrap(buf)
+        recordBuff.position(ReservedLength)
         val record = Record()
+        record.position = filePosition
 
         tableJournal.columns.forEach { col ->
           val cell: RecordCell
 
           if (col.type == ColumnType.INT) {
-            cell = RecordCell(ColumnType.INT, bytes.int.toString())
+            cell = RecordCell(ColumnType.INT, recordBuff.int.toString())
           } else if (col.type == ColumnType.VARCHAR) {
             val buf2 = ByteArray(col.length!!)
-            bytes.get(buf2)
+            recordBuff.get(buf2)
             var strLen = 0
             for (i in buf2.indices) {
               strLen = i
@@ -114,15 +121,35 @@ class TableFileMapper(private var tableJournal: TableJournal,
 
             cell = RecordCell(ColumnType.VARCHAR, String(buf2, 0, strLen))
           } else if (col.type == ColumnType.SMALLINT) {
-            cell = RecordCell(ColumnType.SMALLINT, bytes.getShort().toString())
+            cell = RecordCell(ColumnType.SMALLINT, recordBuff.getShort().toString())
           } else {
             cell = RecordCell(ColumnType.NULL, "")
           }
           record.cells.add(cell)
         }
         list.add(record)
+
+        filePosition += len
       }
     }
     return list
+  }
+
+  override fun update(record: Record) {
+    val map = HashMap<String, RecordCell>()
+
+    for (i in tableJournal.columns.indices) {
+      map[tableJournal.columns[i].name] = record.cells[i]
+    }
+    val recordBuffer = recordToBinary(map)
+    println("position=" + record.position)
+    RandomAccessFile(File(filePath), "rw").use { ro ->
+      ro.skipBytes(record.position!!.toInt())
+      ro.write(recordBuffer.array())
+    }
+  }
+
+  override fun delete(record: Record) {
+    TODO("Not yet implemented")
   }
 }
