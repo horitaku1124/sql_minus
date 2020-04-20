@@ -15,6 +15,7 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
   private val DB_PATH = "./db_files"
 //  private var fileMapper: FileMapper<DatabaseInformation> = JavaObjectMapper()
   private var fileMapper: FileMapper<DatabaseInformation> = YamlFileMapper()
+  private var queryCompiler = QueryCompiler()
 
   fun execute(
     syntax: SyntaxTree,
@@ -203,7 +204,7 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
       sb.append('\n')
       val result2 = tableMapper.select(selectParts)
       var result3 = arrayListOf<Record>()
-      var compiled = compileWhere(columns, recipe.whereTree)
+      var compiled = queryCompiler.compileWhere(columns, recipe.whereTree)
       for (record in result2) {
         if (compiled.isSatisfied(record)) {
           result3.add(record)
@@ -255,7 +256,7 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
 
       val result2 = tableMapper.select(listOf())
       var result3 = arrayListOf<Record>()
-      var compiled = compileWhere(columns, recipe.whereTree[0])
+      var compiled = queryCompiler.compileWhere(columns, recipe.whereTree[0])
       for (record in result2) {
         if (compiled.isSatisfied(record)) {
           result3.add(record)
@@ -296,23 +297,5 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
       throw DBRuntimeException("DB is not selected")
     }
     return session.dbInfo!!
-  }
-
-  private fun compileWhere(columns: List<Column>, recipe: WhereRecipes): WhereVerifyGate {
-    if (recipe.expression.size == 3) {
-      val colName = recipe.expression[0]
-      var colIndex = -1
-      for (i in 0 until columns.size) {
-        if (columns[i].name == colName) {
-          colIndex = i
-          break
-        }
-      }
-      return WhereVerifyGate.andRule(colIndex, recipe.expression[1], recipe.expression[2])
-    } else {
-      return WhereVerifyGate(Predicate<Record> {
-        true
-      })
-    }
   }
 }

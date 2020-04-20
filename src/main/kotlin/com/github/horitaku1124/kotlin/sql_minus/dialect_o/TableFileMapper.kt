@@ -7,7 +7,7 @@ import java.io.File
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 
-class TableFileMapper(private var tableJournal: TableJournal,
+open class TableFileMapper(private var tableJournal: TableJournal,
                       private var filePath: String): TableMapper {
   private val ReservedLength = 4
   private val RecordLength: Int
