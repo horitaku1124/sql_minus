@@ -5,13 +5,19 @@ import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Record
 import java.util.function.Predicate
 
 class WhereVerifyGate(private var filter: Predicate<Record>) {
+  var andRules = arrayListOf<WhereVerifyGate>()
+  var orRules = arrayListOf<WhereVerifyGate>()
 
   fun isSatisfied(record: Record): Boolean {
-    return filter.test(record)
+    if (!filter.test(record)) return false
+    for (andRule in andRules) {
+      if (!andRule.isSatisfied(record)) return false
+    }
+    return true
   }
 
   companion object {
-    fun andRule(subjectIndex: Int, operator: String, objective: String): WhereVerifyGate {
+    fun addOperand(subjectIndex: Int, operator: String, objective: String): WhereVerifyGate {
       val objectIsStr = objective.startsWith("'")
       val intValue: Int? = if (objectIsStr) null else objective.toInt()
 

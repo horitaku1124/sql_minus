@@ -213,6 +213,36 @@ class TokenizerTests {
       }
     }
   }
+  @Test
+  fun select4CanBeParsed() {
+    val sql = "select id,name from tb3 where status = 1 and age > 10"
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      println(tokens)
+      val st = tn.parse(tokens)
+      assertEquals(1, st.size)
+      st[0].let { syntax ->
+        val recipe = syntax.recipe.get() as SelectQueryRecipe
+
+        assertEquals(2, recipe.selectParts.size)
+        assertEquals("id", recipe.selectParts[0])
+        assertEquals("name", recipe.selectParts[1])
+        assertEquals(1, recipe.fromParts.size)
+        assertEquals("tb3", recipe.fromParts[0])
+        assertEquals(7, recipe.whereTree.expression.size)
+        recipe.whereTree.expression.let { exp ->
+          assertEquals("status", exp[0])
+          assertEquals("=", exp[1])
+          assertEquals("1", exp[2])
+          assertEquals("and", exp[3])
+          assertEquals("age", exp[4])
+          assertEquals(">", exp[5])
+          assertEquals("10", exp[6])
+        }
+      }
+    }
+  }
 
   @Test
   fun updateCanBeParsed() {

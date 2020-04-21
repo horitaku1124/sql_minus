@@ -224,18 +224,29 @@ class Tokenizer {
         nextToken = tokens[index++]
         if (nextToken.toLowerCase() == "where") {
           remainNum--
-          if (remainNum > 2) {
-            var subject = tokens[index++]
-            var operator = tokens[index++]
-            var objective = tokens[index++]
-            remainNum = remainNum - 3
-            selectRecipe.whereTree.expression.add(subject)
-            selectRecipe.whereTree.expression.add(operator)
-            selectRecipe.whereTree.expression.add(objective)
+          while(remainNum > 0) {
+            if (remainNum > 2) {
+              var subject = tokens[index++]
+              var operator = tokens[index++]
+              var objective = tokens[index++]
+              remainNum = remainNum - 3
+              selectRecipe.whereTree.expression.add(subject)
+              selectRecipe.whereTree.expression.add(operator)
+              selectRecipe.whereTree.expression.add(objective)
+
+              if (remainNum > 0) {
+                nextToken = tokens[index++].toLowerCase()
+                remainNum--
+                if (nextToken == "and" || nextToken == "or") {
+                  selectRecipe.whereTree.expression.add(nextToken)
+                }
+              }
+            }
           }
         }
+      } else {
+        break
       }
-      break
     }
 
     selectRecipe.selectParts = selectParts
