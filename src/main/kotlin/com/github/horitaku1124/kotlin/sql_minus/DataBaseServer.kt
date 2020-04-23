@@ -43,9 +43,13 @@ class DataBaseServer(private var socket: Socket): java.lang.Thread() {
         val syntaxList = tokenizer.parse(tokens)
 
         syntaxList.forEach {syntax ->
+          var startedAt = System.currentTimeMillis()
           val result = dbEngine.execute(syntax, session)
           if (!result.isEmpty()) {
             strToClient(result)
+
+            var endedAt = System.currentTimeMillis()
+            strToClient((endedAt - startedAt).toString() + "ms\n")
           }
         }
       } catch (e: DBRuntimeException) {
