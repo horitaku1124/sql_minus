@@ -213,7 +213,9 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
       for(record in result3) {
         for (i in shows) {
           var cell = record.cells[i]
-          if (cell.type == ColumnType.VARCHAR) {
+          if (cell.isNull) {
+            sb.append("NULL")
+          } else if (cell.type == ColumnType.VARCHAR) {
             sb.append(cell.textValue)
           } else {
             sb.append(cell.intValue!!.toInt())

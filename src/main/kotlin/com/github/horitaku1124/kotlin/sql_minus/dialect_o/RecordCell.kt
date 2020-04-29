@@ -4,6 +4,7 @@ import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.ColumnType.*
 
 class RecordCell(var type: ColumnType, value: String) {
+  var isNull = false
   var intValue: Int? = null
   var textValue: String? = null
   init {

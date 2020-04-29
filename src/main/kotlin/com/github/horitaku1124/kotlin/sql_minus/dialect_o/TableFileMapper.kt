@@ -12,9 +12,11 @@ open class TableFileMapper(private var tableJournal: TableJournal,
                       private var filePath: String): TableMapper {
   private val ReservedLength = 2
   private val RecordLength: Int
+  private val NullFlagsLength: Int
   init {
     var recordLength = ReservedLength
-    recordLength += BinaryBuffer.octetOf(tableJournal.columns.size)
+    NullFlagsLength = BinaryBuffer.octetOf(tableJournal.columns.size)
+    recordLength += NullFlagsLength
     tableJournal.columns.forEach { col ->
       if (col.type == ColumnType.INT) {
         recordLength += 4
@@ -117,7 +119,13 @@ open class TableFileMapper(private var tableJournal: TableJournal,
         val record = Record()
         record.position = filePosition
 
-        tableJournal.columns.forEach { col ->
+        var nullFlagsByte = ByteArray(NullFlagsLength)
+        recordBuff.get(nullFlagsByte)
+        var nullFlags = BinaryBuffer.loadFrom(nullFlagsByte, tableJournal.columns.size)
+
+        for (colNum in tableJournal.columns.indices) {
+          var col = tableJournal.columns[colNum]
+
           val cell: RecordCell
 
           if (col.type == ColumnType.INT) {
@@ -138,6 +146,9 @@ open class TableFileMapper(private var tableJournal: TableJournal,
             cell = RecordCell(ColumnType.SMALLINT, recordBuff.getShort().toString())
           } else {
             cell = RecordCell(ColumnType.NULL, "")
+          }
+          if (nullFlags[colNum]) {
+            cell.isNull = true
           }
           record.cells.add(cell)
         }
