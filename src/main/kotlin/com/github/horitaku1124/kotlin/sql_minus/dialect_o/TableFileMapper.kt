@@ -3,16 +3,18 @@ package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.TableMapper
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.journals.TableJournal
+import com.github.horitaku1124.kotlin.sql_minus.utils.BinaryBuffer
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 
 open class TableFileMapper(private var tableJournal: TableJournal,
                       private var filePath: String): TableMapper {
-  private val ReservedLength = 4
+  private val ReservedLength = 2
   private val RecordLength: Int
   init {
     var recordLength = ReservedLength
+    recordLength += BinaryBuffer.octetOf(tableJournal.columns.size)
     tableJournal.columns.forEach { col ->
       if (col.type == ColumnType.INT) {
         recordLength += 4
@@ -29,7 +31,19 @@ open class TableFileMapper(private var tableJournal: TableJournal,
 
   private fun recordToBinary(map: HashMap<String, RecordCell>): ByteBuffer {
     val recordBuffer = ByteBuffer.allocate(RecordLength)
-    recordBuffer.putInt(12345)
+    var nullColumns = Array(tableJournal.columns.size) { true } // `true` means NULL
+
+    for (i in tableJournal.columns.indices) {
+      val col = tableJournal.columns[i]
+      if (map.containsKey(col.name)) {
+        nullColumns[i] = false
+      }
+    }
+    var bb = BinaryBuffer(nullColumns)
+    var nullFlags = bb.toBytes()
+
+    recordBuffer.put(0x7F).put(0x0F)
+    recordBuffer.put(nullFlags)
     tableJournal.columns.forEach { col ->
       var cell: RecordCell? = null
       if (map.containsKey(col.name)) {
