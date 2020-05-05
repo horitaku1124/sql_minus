@@ -73,6 +73,11 @@ class Tokenizer {
           syntax = ret.first
           index = ret.second
         }
+        "delete" -> {
+          val ret = parseDelete(tokens, index)
+          syntax = ret.first
+          index = ret.second
+        }
         else -> {
           throw DBRuntimeException("unrecognized command => $startToken")
         }
@@ -299,6 +304,37 @@ class Tokenizer {
       recipe.whereTree.add(where)
     }
 
+    syntax.recipe = Optional.of(recipe)
+    return Pair(syntax, index)
+  }
+
+  private fun parseDelete(tokens: List<String>, startIndex: Int): Pair<SyntaxTree, Int> {
+    var recipe = DeleteQueryRecipe()
+    var index = startIndex
+    val syntax = SyntaxTree(DELETE_QUERY)
+    if (tokens[index++].toLowerCase() != "from") {
+      throw DBRuntimeException("error => " + (tokens[index - 1]))
+    }
+    recipe.targetTable = tokens[index++]
+
+    if (index >= tokens.size) {
+      return Pair(syntax, index)
+    }
+    if (tokens[index++].toLowerCase() != "where") {
+      throw DBRuntimeException("error => " + (tokens[index - 1]))
+    }
+    while (index < tokens.size) {
+      var subject = tokens[index++]
+      var ope = tokens[index++]
+      var objective = tokens[index++]
+
+      var where = WhereRecipes()
+      where.expression.add(subject)
+      where.expression.add(ope)
+      where.expression.add(objective)
+
+      recipe.whereTree.add(where)
+    }
     syntax.recipe = Optional.of(recipe)
     return Pair(syntax, index)
   }

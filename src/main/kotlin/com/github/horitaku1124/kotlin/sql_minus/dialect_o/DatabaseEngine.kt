@@ -57,6 +57,10 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
       val recipe = syntax.recipe.get() as UpdateQueryRecipe
       return updateQuery(session, recipe)
     }
+    if (syntax.type == DELETE_QUERY) {
+      val recipe = syntax.recipe.get() as DeleteQueryRecipe
+      return deleteQuery(session, recipe)
+    }
 
     return "Error:"
   }
@@ -286,6 +290,49 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
           }
         }
         tableMapper.update(record)
+        if (updated) {
+          updateCount++
+        }
+      }
+      return "${updateCount} records updated\n"
+    }
+  }
+
+  private fun deleteQuery(session: ClientSession, recipe: DeleteQueryRecipe): String {
+    val dbInfo = chooseDatabase(session)
+    val tableName = recipe.targetTable
+
+    val result = dbInfo.tables.filter { tb ->
+      tb.name == tableName
+    }
+    if (result.isEmpty()) {
+      throw DBRuntimeException("table doesn't exist -> ${tableName}")
+    }
+    val table = result[0]
+
+    val tableFile = session.dbPath.resolve(table.fileName).toFile()
+    if (!tableFile.exists()) {
+      throw DBRuntimeException("table journal is gone")
+    }
+    println(tableFile.absolutePath)
+
+    // TODO make it loose couple
+    tableMapper.build(table, tableFile.absolutePath).use { tableMapper ->
+      val columns = tableMapper.columns()
+
+      val result2 = tableMapper.select(listOf())
+      var result3 = arrayListOf<Record>()
+      var compiled = queryCompiler.compileWhere(columns, recipe.whereTree[0])
+      for (record in result2) {
+        if (compiled.isSatisfied(record)) {
+          result3.add(record)
+        }
+      }
+
+      var updateCount = 0
+      for (record in result3) {
+        var updated = false
+        tableMapper.delete(record)
         if (updated) {
           updateCount++
         }

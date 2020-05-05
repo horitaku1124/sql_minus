@@ -114,8 +114,18 @@ open class TableFileMapper(private var tableJournal: TableJournal,
         val len = ro.read(buf)
         if (len < 0) break
 
-        val recordBuff = ByteBuffer.wrap(buf)
-        recordBuff.position(ReservedLength)
+        var deleted = false
+        val recordBuff = ByteBuffer.wrap(buf).also {
+          var b0 = it.get().toInt()
+          var b1 = it.get().toInt()
+          if (b1 == 0b01) {
+            deleted = true
+          }
+        }
+        if (deleted) {
+          continue
+        }
+
         val record = Record()
         record.position = filePosition
 
@@ -143,7 +153,7 @@ open class TableFileMapper(private var tableJournal: TableJournal,
 
             cell = RecordCell(ColumnType.VARCHAR, String(buf2, 0, strLen))
           } else if (col.type == ColumnType.SMALLINT) {
-            cell = RecordCell(ColumnType.SMALLINT, recordBuff.getShort().toString())
+            cell = RecordCell(ColumnType.SMALLINT, recordBuff.short.toString())
           } else {
             cell = RecordCell(ColumnType.NULL, "")
           }
@@ -175,6 +185,11 @@ open class TableFileMapper(private var tableJournal: TableJournal,
   }
 
   override fun delete(record: Record) {
-    TODO("Not yet implemented")
+    println("position=" + record.position)
+    RandomAccessFile(File(filePath), "rw").use { ro ->
+      ro.skipBytes(record.position!!.toInt())
+      ro.writeByte(0x7F)
+      ro.writeByte(0b01)
+    }
   }
 }
