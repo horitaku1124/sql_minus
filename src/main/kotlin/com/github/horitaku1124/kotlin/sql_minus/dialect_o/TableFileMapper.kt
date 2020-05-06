@@ -77,18 +77,16 @@ open class TableFileMapper(private var tableJournal: TableJournal,
   }
 
   override fun insert(columns: List<String>, record: Record) {
-    val map = HashMap<String, RecordCell>()
-
-    for (i in columns.indices) {
-      val col = columns[i]
-      val cell = record.cells[i]
-      map[col] = cell
+    val colToCellMap = HashMap<String, RecordCell>().also {
+      for (i in columns.indices) {
+        it[columns[i]] = record.cells[i]
+      }
     }
 
     val position = File(filePath).length()
     println("position=" + position)
 
-    val recordBuffer = recordToBinary(map)
+    val recordBuffer = recordToBinary(colToCellMap)
     val array = recordBuffer.array()
     println("buffer=" + array.size)
 
@@ -106,7 +104,7 @@ open class TableFileMapper(private var tableJournal: TableJournal,
 
   override fun select(columns: List<String>): List<Record> {
     val list = arrayListOf<Record>()
-    RandomAccessFile(File(filePath), "rw").use { ro ->
+    RandomAccessFile(File(filePath), "r").use { ro ->
       val buf = ByteArray(RecordLength)
       var filePosition = 0L
 
@@ -171,12 +169,13 @@ open class TableFileMapper(private var tableJournal: TableJournal,
   }
 
   override fun update(record: Record) {
-    val map = HashMap<String, RecordCell>()
-
-    for (i in tableJournal.columns.indices) {
-      map[tableJournal.columns[i].name] = record.cells[i]
+    val nameToCellMap = HashMap<String, RecordCell>().also {
+      for (i in tableJournal.columns.indices) {
+        it[tableJournal.columns[i].name] = record.cells[i]
+      }
     }
-    val recordBuffer = recordToBinary(map)
+
+    val recordBuffer = recordToBinary(nameToCellMap)
     println("position=" + record.position)
     RandomAccessFile(File(filePath), "rw").use { ro ->
       ro.skipBytes(record.position!!.toInt())
