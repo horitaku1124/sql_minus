@@ -17,15 +17,16 @@ class WhereVerifyGate(private var filter: Predicate<Record>) {
   }
 
   companion object {
+    private val isIntReg = "^-?\\d+$".toRegex()
     fun addOperand(subjectIndex: Int, operator: String, objective: String): WhereVerifyGate {
-      val objectIsStr = objective.startsWith("'")
-      val intValue: Int? = if (objectIsStr) null else objective.toInt()
+      val objectIsInt = isIntReg.matches(objective)
+      val intValue: Int? = if (objectIsInt) objective.toInt() else null
 
       if (operator == "=") {
         return WhereVerifyGate(object: Predicate<Record>{
           override fun test(record: Record) : Boolean {
             val cell = record.cells[subjectIndex]
-            if (objectIsStr) {
+            if (!objectIsInt) {
 
             } else {
 //              println(" is => " + cell.intValue + " = " + intValue)
@@ -42,7 +43,7 @@ class WhereVerifyGate(private var filter: Predicate<Record>) {
         return WhereVerifyGate(object: Predicate<Record>{
           override fun test(record: Record) : Boolean {
             val cell = record.cells[subjectIndex]
-            if (objectIsStr) {
+            if (!objectIsInt) {
 
             } else {
 //              println(" is => " + cell.intValue + " = " + intValue)
@@ -59,7 +60,7 @@ class WhereVerifyGate(private var filter: Predicate<Record>) {
         return WhereVerifyGate(object: Predicate<Record>{
           override fun test(record: Record) : Boolean {
             val cell = record.cells[subjectIndex]
-            if (objectIsStr) {
+            if (!objectIsInt) {
 
             } else {
 //              println(" is => " + cell.intValue + " = " + intValue)
@@ -72,6 +73,17 @@ class WhereVerifyGate(private var filter: Predicate<Record>) {
             return false
           }
         })
+      } else if (operator == "is") {
+        if (objective == "null") {
+          return WhereVerifyGate(object: Predicate<Record>{
+            override fun test(record: Record) : Boolean {
+              val cell = record.cells[subjectIndex]
+              return cell.isNull
+            }
+          })
+        } else {
+          throw DBRuntimeException("error")
+        }
       } else {
         throw DBRuntimeException("error")
       }

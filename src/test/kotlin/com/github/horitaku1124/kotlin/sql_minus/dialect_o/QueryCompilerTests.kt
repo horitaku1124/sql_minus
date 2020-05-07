@@ -62,4 +62,17 @@ class QueryCompilerTests {
       it.cells.add(RecordCell(INT, "6"))
     }))
   }
+  @Test
+  fun compileWhereTest4() {
+    val recipe = WhereRecipes()
+    recipe.expression.addAll(listOf("id", "is", "null"))
+    val compiled = queryCompiler.compileWhere(columns, recipe)
+
+    assertEquals(false, compiled.isSatisfied(Record().also {
+      it.cells.add(RecordCell(INT, "1"))
+    }))
+    assertEquals(true, compiled.isSatisfied(Record().also {
+      it.cells.add(RecordCell(NULL, ""))
+    }))
+  }
 }

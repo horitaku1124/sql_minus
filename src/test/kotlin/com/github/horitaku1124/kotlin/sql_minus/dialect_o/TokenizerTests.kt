@@ -240,6 +240,32 @@ class TokenizerTests {
       }
     }
   }
+  @Test
+  fun select5CanBeParsed() {
+    val sql = "select * from tb3 where name is null"
+
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      println(tokens)
+      val st = tn.parse(tokens)
+      assertEquals(1, st.size)
+      st[0].let { syntax ->
+        val recipe = syntax.recipe.get() as SelectQueryRecipe
+
+        assertEquals(1, recipe.selectParts.size)
+        assertEquals("*", recipe.selectParts[0])
+        assertEquals(1, recipe.fromParts.size)
+        assertEquals("tb3", recipe.fromParts[0])
+        assertEquals(3, recipe.whereTree.expression.size)
+        recipe.whereTree.expression.let { exp ->
+          assertEquals("name", exp[0])
+          assertEquals("is", exp[1])
+          assertEquals("null", exp[2])
+        }
+      }
+    }
+  }
 
   @Test
   fun updateCanBeParsed() {
