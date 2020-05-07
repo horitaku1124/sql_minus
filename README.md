@@ -34,3 +34,17 @@ download [GraalVM20](https://www.graalvm.org/downloads/)
 ```bash
 ./sql_minus-1.0-SNAPSHOT 8001
 ```
+
+
+### Practice
+
+```
+telnet localhost 8001
+> create database db_1
+> connect db_1
+> create table sample_table (id int, name varchar(20), status smallint )
+> insert into sample_table(id, name, status) values (101, 'Taro', 1)
+> select * from sample_table
+> exit
+Bye
+```
