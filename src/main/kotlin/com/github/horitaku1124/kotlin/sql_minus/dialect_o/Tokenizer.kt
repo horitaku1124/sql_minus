@@ -104,7 +104,7 @@ class Tokenizer {
     val recipe = CreateTableRecipe(syntax.subject)
     while (index < tokens.size) {
       val columnParts = arrayListOf<String>()
-      var partsInParen = arrayListOf<String>()
+      val partsInParen = arrayListOf<String>()
       var insideParenthesis = false
       while (index < tokens.size) {
         val part = tokens[index++]
@@ -133,18 +133,46 @@ class Tokenizer {
       val col = Column()
       col.name = columnParts[0]
       val type = columnParts[1].toLowerCase()
-      if (type == "int") {
-        col.type = ColumnType.INT
-      } else if (type == "varchar") {
-        col.type = ColumnType.VARCHAR
-        if (partsInParen.isEmpty()) {
-          throw DBRuntimeException("inside parenthesis must not empty")
+      when (type) {
+        "int" -> {
+          col.type = ColumnType.INT
         }
-        if (partsInParen.size == 1) {
-          col.length = partsInParen[0].toInt()
+        "varchar" -> {
+          col.type = ColumnType.VARCHAR
+          if (partsInParen.isEmpty()) {
+            throw DBRuntimeException("inside parenthesis must not empty")
+          }
+          if (partsInParen.size == 1) {
+            col.length = partsInParen[0].toInt()
+
+            if (col.length!! > 2000) {
+              throw DBRuntimeException("VARCHAR(SIZE) must less than 32,767")
+            }
+          }
         }
-      } else if (type == "smallint") {
-        col.type = ColumnType.SMALLINT
+        "varchar2" -> {
+          col.type = ColumnType.VARCHAR
+          if (partsInParen.isEmpty()) {
+            throw DBRuntimeException("inside parenthesis must not empty")
+          }
+          if (partsInParen.size == 1) {
+            col.length = partsInParen[0].toInt()
+          }
+        }
+        "char" -> {
+          col.type = ColumnType.CHAR
+          if (partsInParen.size == 1) {
+            col.length = partsInParen[0].toInt()
+            if (col.length!! > 2000) {
+              throw DBRuntimeException("CHAR(SIZE) must less than 2000")
+            }
+          } else if (partsInParen.size == 0) {
+            col.length = 1
+          }
+        }
+        "smallint" -> {
+          col.type = ColumnType.SMALLINT
+        }
       }
       recipe.columns.add(col)
     }

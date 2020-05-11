@@ -67,6 +67,53 @@ class TokenizerTests {
     }
   }
   @Test
+  fun createTableCanBeParsed2() {
+    val sql = """
+      create table tb1 (
+          name varchar(20),
+          age int,
+          status smallint,
+          initial char
+      )
+    """.trimIndent()
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      println(tokens)
+      val st = tn.parse(tokens)
+      println(st)
+      assertEquals(1, st.size)
+
+      st[0].let { syntax ->
+        assertEquals(QueryType.CREATE_TABLE, syntax.type)
+        assertEquals("tb1", syntax.subject)
+        syntax.recipe.let { recipe ->
+          val createTable = recipe.get() as CreateTableRecipe
+
+          assertEquals(4, createTable.columns.size)
+          createTable.columns[0].let { col ->
+            assertEquals("name", col.name)
+            assertEquals(ColumnType.VARCHAR, col.type)
+            assertEquals(20, col.length)
+          }
+          createTable.columns[1].let { col ->
+            assertEquals("age", col.name)
+            assertEquals(ColumnType.INT, col.type)
+          }
+          createTable.columns[2].let { col ->
+            assertEquals("status", col.name)
+            assertEquals(ColumnType.SMALLINT, col.type)
+          }
+          createTable.columns[3].let { col ->
+            assertEquals("initial", col.name)
+            assertEquals(ColumnType.CHAR, col.type)
+            assertEquals(1, col.length)
+          }
+        }
+      }
+    }
+  }
+  @Test
   fun insertIntoCanBeParsed() {
     val sql = "insert into tb1(id) values (123)"
 
