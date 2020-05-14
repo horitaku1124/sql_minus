@@ -114,6 +114,45 @@ class TokenizerTests {
     }
   }
   @Test
+  fun createTableCanBeParsed3() {
+    val sql = """
+      create table tb1 (
+          num1 number(10),
+          num2 number(5,3)
+      )
+    """.trimIndent()
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      println(tokens)
+      val st = tn.parse(tokens)
+      println(st)
+      assertEquals(1, st.size)
+
+      st[0].let { syntax ->
+        assertEquals(QueryType.CREATE_TABLE, syntax.type)
+        assertEquals("tb1", syntax.subject)
+        syntax.recipe.let { recipe ->
+          val createTable = recipe.get() as CreateTableRecipe
+
+          assertEquals(2, createTable.columns.size)
+          createTable.columns[0].let { col ->
+            assertEquals("num1", col.name)
+            assertEquals(ColumnType.NUMBER, col.type)
+            assertEquals(10, col.numberFormat!!.first)
+            assertEquals(0, col.numberFormat!!.second)
+          }
+          createTable.columns[1].let { col ->
+            assertEquals("num2", col.name)
+            assertEquals(ColumnType.NUMBER, col.type)
+            assertEquals(5, col.numberFormat!!.first)
+            assertEquals(3, col.numberFormat!!.second)
+          }
+        }
+      }
+    }
+  }
+  @Test
   fun insertIntoCanBeParsed() {
     val sql = "insert into tb1(id) values (123)"
 

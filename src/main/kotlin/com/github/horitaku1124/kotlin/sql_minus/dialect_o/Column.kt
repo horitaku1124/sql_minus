@@ -6,6 +6,7 @@ class Column: java.io.Serializable {
   lateinit var name: String
   lateinit var type: ColumnType
   var length: Int? = null
+  var numberFormat: Pair<Int, Int>? = null
 
   constructor()
   constructor(name: String, type: ColumnType) {

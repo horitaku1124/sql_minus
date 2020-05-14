@@ -173,6 +173,14 @@ class Tokenizer {
         "smallint" -> {
           col.type = ColumnType.SMALLINT
         }
+        "number" -> {
+          col.type = ColumnType.NUMBER
+          if (partsInParen.size == 1) {
+            col.numberFormat = Pair(partsInParen[0].toInt(), 0)
+          } else if (partsInParen.size == 2) {
+            col.numberFormat = Pair(partsInParen[0].toInt(), partsInParen[1].toInt())
+          }
+        }
       }
       recipe.columns.add(col)
     }

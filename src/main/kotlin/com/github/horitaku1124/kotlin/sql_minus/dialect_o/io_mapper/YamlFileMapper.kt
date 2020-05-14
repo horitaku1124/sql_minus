@@ -41,6 +41,12 @@ class YamlFileMapper: FileMapper<DatabaseInformation> {
             if (col.type == ColumnType.VARCHAR) {
               col.length = length.toInt()
             }
+            if (col.type == ColumnType.NUMBER) {
+              val numFormat = lines[index++].trim().replace("numberFormat: ", "")
+              numFormat.split(",").let {
+                col.numberFormat = Pair(it[0].toInt(), it[1].toInt())
+              }
+            }
             table.columns.add(col)
           } else {
             break
@@ -68,6 +74,14 @@ class YamlFileMapper: FileMapper<DatabaseInformation> {
             sb.append("    length: " + col.length).append("\n")
           } else {
             sb.append("    length:").append("\n")
+          }
+          if (col.type == ColumnType.NUMBER) {
+            sb
+              .append("    numberFormat: ")
+              .append(col.numberFormat!!.first)
+              .append(",")
+              .append(col.numberFormat!!.second)
+              .append("\n")
           }
         }
         sb.append("\n")
