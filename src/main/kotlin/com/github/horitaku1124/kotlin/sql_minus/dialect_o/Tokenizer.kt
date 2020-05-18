@@ -221,6 +221,8 @@ class Tokenizer {
 
         if (value.startsWith("'")) {
           record.cells.add(RecordCell(ColumnType.VARCHAR, value.substring(1, value.length - 1)))
+        } else if (value.contains('.')) {
+          record.cells.add(RecordCell(ColumnType.VARCHAR, value))
         } else {
           record.cells.add(RecordCell(ColumnType.INT, value))
         }

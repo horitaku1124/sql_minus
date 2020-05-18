@@ -221,6 +221,8 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
             sb.append("NULL")
           } else if (cell.type == ColumnType.VARCHAR) {
             sb.append(cell.textValue)
+          } else if (cell.type == ColumnType.NUMBER) {
+            sb.append(cell.numberValue)
           } else {
             sb.append(cell.intValue!!.toInt())
           }

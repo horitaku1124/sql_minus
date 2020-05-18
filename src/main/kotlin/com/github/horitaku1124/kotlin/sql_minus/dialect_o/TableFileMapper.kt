@@ -6,6 +6,7 @@ import com.github.horitaku1124.kotlin.sql_minus.dialect_o.journals.TableJournal
 import com.github.horitaku1124.kotlin.sql_minus.utils.BinaryBuffer
 import java.io.File
 import java.io.RandomAccessFile
+import java.math.BigDecimal
 import java.nio.ByteBuffer
 
 open class TableFileMapper(private var tableJournal: TableJournal,
@@ -24,6 +25,8 @@ open class TableFileMapper(private var tableJournal: TableJournal,
         recordLength += col.length!!
       } else if (col.type == ColumnType.SMALLINT) {
         recordLength += 2
+      } else if (col.type == ColumnType.NUMBER) {
+        recordLength += 8
       }
     }
     RecordLength = recordLength
@@ -70,6 +73,24 @@ open class TableFileMapper(private var tableJournal: TableJournal,
           recordBuffer.putShort(0)
         } else {
           recordBuffer.putShort(cell.intValue!!.toShort())
+        }
+      } else if (col.type == ColumnType.NUMBER) {
+//        var value: Long = cell.
+        if (cell == null) {
+          recordBuffer.putLong(0L)
+        } else {
+          var ratio = 1L
+          for (i in 0 until col.numberFormat!!.second) {
+            ratio *= 10
+          }
+          if (cell.intValue != null) {
+            recordBuffer.putLong(cell.intValue!!.toLong() * ratio)
+          } else if (cell.textValue != null) {
+            var decimal = BigDecimal(cell.textValue)
+            decimal = decimal.multiply(BigDecimal.valueOf(ratio))
+            val value = decimal.toLong()
+            recordBuffer.putLong(value)
+          }
         }
       }
     }
@@ -152,6 +173,16 @@ open class TableFileMapper(private var tableJournal: TableJournal,
             cell = RecordCell(ColumnType.VARCHAR, String(buf2, 0, strLen))
           } else if (col.type == ColumnType.SMALLINT) {
             cell = RecordCell(ColumnType.SMALLINT, recordBuff.short.toString())
+          } else if (col.type == ColumnType.NUMBER) {
+            val value = recordBuff.long
+            var number = BigDecimal.valueOf(value)
+            var ratio = 1L
+            for (i in 0 until col.numberFormat!!.second) {
+              ratio *= 10
+            }
+            number = number.divide(BigDecimal.valueOf(ratio))
+
+            cell = RecordCell(number)
           } else {
             cell = RecordCell(ColumnType.NULL, "")
           }

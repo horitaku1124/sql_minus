@@ -233,6 +233,32 @@ class TokenizerTests {
       }
     }
   }
+
+  @Test
+  fun insertInto3CanBeParsed() {
+    val sql = "insert into tb3(price1,price2) values (123,123.567)"
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      val st = tn.parse(tokens)
+      assertEquals(1, st.size)
+      st[0].let { syntax ->
+        assertEquals("tb3", syntax.subject)
+        val recipe = syntax.recipe.get() as InsertIntoRecipe
+
+        assertEquals(2, recipe.columns.size)
+        assertEquals("price1", recipe.columns[0])
+        assertEquals("price2", recipe.columns[1])
+        assertEquals(1, recipe.records.size)
+        assertEquals(2, recipe.records[0].cells.size)
+        assertEquals(ColumnType.INT, recipe.records[0].cells[0].type)
+        assertEquals(123, recipe.records[0].cells[0].intValue)
+        assertEquals(ColumnType.VARCHAR, recipe.records[0].cells[1].type)
+        assertEquals("123.567", recipe.records[0].cells[1].textValue)
+      }
+    }
+  }
+
   @Test
   fun select1CanBeParsed() {
     val sql = "select * from tb2"
