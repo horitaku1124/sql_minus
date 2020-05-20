@@ -17,6 +17,7 @@ class RecordCell{
     isNull = false
   }
   constructor(type: ColumnType, value: String) {
+    this.type = type
     if (type == INT) {
       intValue = value.toInt()
       isNull = intValue == null
