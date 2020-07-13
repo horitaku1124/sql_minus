@@ -21,6 +21,8 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter:5.5.2"
     testImplementation "org.junit.jupiter:junit-jupiter-engine:5.5.2"
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.3.3'
+
+    implementation "com.google.protobuf:protobuf-java:3.11.0"
 }
 test {
     useJUnitPlatform()
