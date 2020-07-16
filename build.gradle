@@ -22,7 +22,9 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-engine:5.5.2"
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.3.3'
 
+    // Might using "Reflection"
     implementation "com.google.protobuf:protobuf-java:3.11.0"
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.3.4'
 }
 test {
     useJUnitPlatform()

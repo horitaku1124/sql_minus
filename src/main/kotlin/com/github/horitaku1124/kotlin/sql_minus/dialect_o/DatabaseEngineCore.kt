@@ -1,16 +1,21 @@
 package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
-import com.github.horitaku1124.kotlin.sql_minus.*
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.horitaku1124.kotlin.sql_minus.ClientSession
+import com.github.horitaku1124.kotlin.sql_minus.ColumnType
+import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
+import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.ExecuteResult.ExecuteResultBuilder
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.io_mapper.FileMapper
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.io_mapper.YamlFileMapper
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.journals.TableJournal
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.*
 import com.github.horitaku1124.kotlin.sql_minus.utils.StringUtil
-import java.io.*
+import java.io.File
 import java.nio.file.Files
 
-class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
+class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
   private val DB_PATH = "./db_files"
 //  private var fileMapper: FileMapper<DatabaseInformation> = JavaObjectMapper()
   private var fileMapper: FileMapper<DatabaseInformation> = YamlFileMapper()
@@ -19,12 +24,17 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
   fun execute(
     syntax: SyntaxTree,
     session: ClientSession
-  ): String {
+  ): ExecuteResult {
+    val resultBuilder = ExecuteResultBuilder.builder()
+      .setStatus(ExecuteResult.ResultStatus.OK)
+      .setQueryType(syntax.type)
     if (syntax.type == CREATE_DATABASE) {
-      return createDatabase(session, syntax.subject)
+      val message = createDatabase(session, syntax.subject)
+      return resultBuilder.setMessage(message).build()
     }
     if (syntax.type == CHANGE_DATABASE) {
-      return changeDatabase(session, syntax.subject)
+      val message = changeDatabase(session, syntax.subject)
+      return resultBuilder.setMessage(message).build()
     }
     if (syntax.type == SHOW_TABLES) {
       val dbInfo = chooseDatabase(session)
@@ -36,32 +46,40 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
           sb.append(tb.name).append("\n")
         }
       }
-      return sb.toString()
+      return resultBuilder.setMessage(sb.toString()).build()
     }
     if (syntax.type == INSERT_QUERY) {
-      return insertInto(session, syntax.recipe.get() as InsertIntoRecipe)
+      val message = insertInto(session, syntax.recipe.get() as InsertIntoRecipe)
+      return resultBuilder.setMessage(message).build()
     }
     if (syntax.type == CREATE_TABLE) {
       val recipe = syntax.recipe.get() as CreateTableRecipe
-      return createTable(session, recipe)
+      val message = createTable(session, recipe)
+      return resultBuilder.setMessage(message).build()
     }
     if (syntax.type == DROP_TABLE) {
-      return dropTable(session, syntax.subject)
-    }
-    if (syntax.type == SELECT_QUERY) {
-      val recipe = syntax.recipe.get() as SelectQueryRecipe
-      return selectQuery(session, recipe)
+      val message = dropTable(session, syntax.subject)
+      return resultBuilder.setMessage(message).build()
     }
     if (syntax.type == UPDATE_QUERY) {
       val recipe = syntax.recipe.get() as UpdateQueryRecipe
-      return updateQuery(session, recipe)
+      val message = updateQuery(session, recipe)
+      return resultBuilder.setMessage(message).build()
     }
     if (syntax.type == DELETE_QUERY) {
       val recipe = syntax.recipe.get() as DeleteQueryRecipe
-      return deleteQuery(session, recipe)
+      val message = deleteQuery(session, recipe)
+      return resultBuilder.setMessage(message).build()
+    }
+    if (syntax.type == SELECT_QUERY) {
+      val recipe = syntax.recipe.get() as SelectQueryRecipe
+      val resultRecords = selectQuery(session, recipe)
+      val mapper = ObjectMapper()
+      val json = mapper.writeValueAsString(resultRecords)
+      return resultBuilder.setMessage(json).build()
     }
 
-    return "Error:"
+    return ExecuteResultBuilder.errorCase()
   }
 
   private fun createDatabase(session: ClientSession, databaseName: String): String {
@@ -159,7 +177,7 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
     return "OK\n"
   }
 
-  private fun selectQuery(session: ClientSession, recipe: SelectQueryRecipe): String {
+  private fun selectQuery(session: ClientSession, recipe: SelectQueryRecipe): List<Map<String, String>> {
     val dbInfo = chooseDatabase(session)
 
     val selectParts = recipe.selectParts
@@ -198,13 +216,6 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
           }
         }
       }
-      for (i in shows) {
-        sb.append(columns[i].name)
-        sb.append('\t')
-      }
-      sb.append('\n')
-      sb.append("-".repeat(20))
-      sb.append('\n')
       val fullScannedRecords = tableMapper.select(selectParts)
       var satisfiedRecords = arrayListOf<Record>()
       var compiled = queryCompiler.compileWhere(columns, recipe.whereTree)
@@ -213,24 +224,29 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
           satisfiedRecords.add(record)
         }
       }
+      var resultMapList = arrayListOf<Map<String, String>>()
       for(record in satisfiedRecords) {
+        var recordMap = hashMapOf<String, String>()
         for (i in shows) {
+          var col = columns[i]
           var cell = record.cells[i]
-          if (cell.isNull) {
-            sb.append("NULL")
-          } else if (cell.type == ColumnType.VARCHAR) {
-            sb.append(cell.textValue)
-          } else if (cell.type == ColumnType.NUMBER) {
-            sb.append(cell.numberValue)
-          } else {
-            sb.append(cell.intValue!!.toInt())
-          }
-          sb.append('\t')
+
+          recordMap.put(col.name,
+            if (cell.isNull) {
+              ""
+            } else if (cell.type == ColumnType.VARCHAR) {
+              cell.textValue!!
+            } else if (cell.type == ColumnType.NUMBER) {
+              cell.numberValue.toString()
+            } else {
+              cell.intValue!!.toString()
+            }
+          )
         }
-        sb.append('\n')
+        resultMapList.add(recordMap)
       }
+      return resultMapList
     }
-    return sb.toString()
   }
 
   private fun updateQuery(session: ClientSession, recipe: UpdateQueryRecipe): String {

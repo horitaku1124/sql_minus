@@ -1,6 +1,7 @@
 package com.github.horitaku1124.kotlin.sql_minus
 
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.DatabaseEngine
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.DatabaseEngineCore
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.ExecuteResult
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.SystemTableFileMapperBuilder
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Tokenizer
 import com.github.horitaku1124.kotlin.sql_minus_driver.protos.ExecQueryProtos
@@ -9,17 +10,16 @@ import java.net.Socket
 
 class DBRpcServer(private var socket: Socket): java.lang.Thread() {
   companion object {
-    private var dbEngine: DatabaseEngine
+    private var dbEngine: DatabaseEngineCore
     init {
       println("DataBaseServer.init()")
-      dbEngine = DatabaseEngine(SystemTableFileMapperBuilder())
+      dbEngine = DatabaseEngineCore(SystemTableFileMapperBuilder())
     }
   }
   override fun run() {
     val buf = ByteArray(1024 * 1024)
     val fromClient = socket.getInputStream()
     val toLClient = socket.getOutputStream()
-
 
     val queryParser = QueryParser()
     val tokenizer = Tokenizer()
@@ -38,18 +38,19 @@ class DBRpcServer(private var socket: Socket): java.lang.Thread() {
         val tokens = queryParser.lexicalAnalysis(parseFrom.query)
         val syntaxList = tokenizer.parse(tokens)
 
-        val sb = StringBuffer()
         syntaxList.forEach {syntax ->
           val result = dbEngine.execute(syntax, session)
-          sb.append(result)
+
+          val resultProtos = ExecResultProtos.Result.newBuilder()
+            .setStatus(if (result.status == ExecuteResult.ResultStatus.OK) 1 else 2)
+            .setBody(result.message)
+            .build()
+          val resultBytes = resultProtos.toByteArray()
+          toLClient.write(resultBytes)
+          toLClient.flush()
+
         }
-        val resultProtos = ExecResultProtos.Result.newBuilder()
-          .setStatus(1)
-          .setBody(sb.toString())
-          .build()
-        val resultBytes = resultProtos.toByteArray()
-        toLClient.write(resultBytes)
-        toLClient.flush()
+
       } catch (e: DBRuntimeException) {
         e.printStackTrace()
 

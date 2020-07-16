@@ -11,4 +11,5 @@ enum class QueryType {
   UPDATE_QUERY,
   DELETE_QUERY,
   SHOW_TABLES,
+  UNKNOWN,
 }
