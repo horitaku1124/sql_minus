@@ -1,7 +1,10 @@
-package com.github.horitaku1124.kotlin.sql_minus.dialect_o
+package com.github.horitaku1124.kotlin.sql_minus.dialect_o.repositories
 
 import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.TableMapper
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Column
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Record
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.RecordCell
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.journals.TableJournal
 import com.github.horitaku1124.kotlin.sql_minus.utils.BinaryBuffer
 import java.io.File
@@ -158,7 +161,10 @@ open class TableFileMapper(private var tableJournal: TableJournal,
           val cell: RecordCell
 
           if (col.type == ColumnType.INT) {
-            cell = RecordCell(ColumnType.INT, recordBuff.int.toString())
+            cell = RecordCell(
+              ColumnType.INT,
+              recordBuff.int.toString()
+            )
           } else if (col.type == ColumnType.VARCHAR) {
             val buf2 = ByteArray(col.length!!)
             recordBuff.get(buf2)
@@ -170,9 +176,15 @@ open class TableFileMapper(private var tableJournal: TableJournal,
               }
             }
 
-            cell = RecordCell(ColumnType.VARCHAR, String(buf2, 0, strLen))
+            cell = RecordCell(
+              ColumnType.VARCHAR,
+              String(buf2, 0, strLen)
+            )
           } else if (col.type == ColumnType.SMALLINT) {
-            cell = RecordCell(ColumnType.SMALLINT, recordBuff.short.toString())
+            cell = RecordCell(
+              ColumnType.SMALLINT,
+              recordBuff.short.toString()
+            )
           } else if (col.type == ColumnType.NUMBER) {
             val value = recordBuff.long
             var number = BigDecimal.valueOf(value)

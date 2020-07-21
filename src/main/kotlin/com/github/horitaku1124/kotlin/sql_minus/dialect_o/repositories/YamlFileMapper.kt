@@ -1,4 +1,4 @@
-package com.github.horitaku1124.kotlin.sql_minus.dialect_o.io_mapper
+package com.github.horitaku1124.kotlin.sql_minus.dialect_o.repositories
 
 import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Column
@@ -8,7 +8,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
 
-class YamlFileMapper: FileMapper<DatabaseInformation> {
+class YamlFileMapper: SingleFileRepository<DatabaseInformation> {
   override fun loadObject(file: File): DatabaseInformation {
     val dbInfo = DatabaseInformation()
     val lines = Files.readAllLines(file.toPath())
