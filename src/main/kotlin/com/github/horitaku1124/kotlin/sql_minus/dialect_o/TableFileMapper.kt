@@ -135,7 +135,7 @@ open class TableFileMapper(private var tableJournal: TableJournal,
 
         var deleted = false
         val recordBuff = ByteBuffer.wrap(buf).also {
-          var b0 = it.get().toInt()
+//          var b0 = it.get().toInt()
           var b1 = it.get().toInt()
           if (b1 == 0b01) {
             deleted = true

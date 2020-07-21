@@ -198,7 +198,6 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
     }
     println(tableFile.absolutePath)
 
-    val sb = StringBuffer()
     // TODO make it loose couple
     tableMapper.build(table, tableFile.absolutePath).use { tableMapper ->
       val columns = tableMapper.columns()
@@ -217,19 +216,19 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
         }
       }
       val fullScannedRecords = tableMapper.select(selectParts)
-      var satisfiedRecords = arrayListOf<Record>()
-      var compiled = queryCompiler.compileWhere(columns, recipe.whereTree)
+      val satisfiedRecords = arrayListOf<Record>()
+      val compiled = queryCompiler.compileWhere(columns, recipe.whereTree)
       for (record in fullScannedRecords) {
         if (compiled.isSatisfied(record)) {
           satisfiedRecords.add(record)
         }
       }
-      var resultMapList = arrayListOf<Map<String, String>>()
+      val resultMapList = arrayListOf<Map<String, String>>()
       for(record in satisfiedRecords) {
-        var recordMap = hashMapOf<String, String>()
+        val recordMap = hashMapOf<String, String>()
         for (i in shows) {
-          var col = columns[i]
-          var cell = record.cells[i]
+          val col = columns[i]
+          val cell = record.cells[i]
 
           recordMap.put(col.name,
             if (cell.isNull) {
@@ -278,8 +277,8 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
       val columns = tableMapper.columns()
 
       val result2 = tableMapper.select(listOf())
-      var result3 = arrayListOf<Record>()
-      var compiled = queryCompiler.compileWhere(columns, recipe.whereTree[0])
+      val result3 = arrayListOf<Record>()
+      val compiled = queryCompiler.compileWhere(columns, recipe.whereTree[0])
       for (record in result2) {
         if (compiled.isSatisfied(record)) {
           result3.add(record)
