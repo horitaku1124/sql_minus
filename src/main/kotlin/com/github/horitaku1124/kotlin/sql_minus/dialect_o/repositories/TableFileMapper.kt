@@ -45,7 +45,7 @@ open class TableFileMapper(private var tableJournal: TableJournal,
 
     for (i in tableJournal.columns.indices) {
       val col = tableJournal.columns[i]
-      if (map.containsKey(col.name)) {
+      if (map.containsKey(col.name) && !map[col.name]!!.isNull) {
         nullColumns[i] = false
       }
     }
@@ -60,7 +60,7 @@ open class TableFileMapper(private var tableJournal: TableJournal,
         cell = map[col.name]
       }
       if (col.type == ColumnType.INT) {
-        if (cell == null) {
+        if (cell == null || cell.isNull) {
           recordBuffer.putInt(0)
         } else {
           recordBuffer.putInt(cell.intValue!!)
