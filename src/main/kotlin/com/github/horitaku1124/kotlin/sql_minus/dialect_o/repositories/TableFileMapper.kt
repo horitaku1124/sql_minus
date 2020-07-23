@@ -11,6 +11,8 @@ import java.io.File
 import java.io.RandomAccessFile
 import java.math.BigDecimal
 import java.nio.ByteBuffer
+import java.nio.file.Files
+import java.nio.file.Path
 
 open class TableFileMapper(private var tableJournal: TableJournal,
                       private var filePath: String): TableMapper {
@@ -233,5 +235,9 @@ open class TableFileMapper(private var tableJournal: TableJournal,
       ro.writeByte(0x7F)
       ro.writeByte(0b01)
     }
+  }
+
+  override fun createTable() {
+    Files.createFile(Path.of(filePath))
   }
 }

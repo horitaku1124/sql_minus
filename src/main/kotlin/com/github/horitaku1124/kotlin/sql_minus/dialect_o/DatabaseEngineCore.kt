@@ -15,8 +15,13 @@ import com.github.horitaku1124.kotlin.sql_minus.utils.StringUtil
 import java.io.File
 import java.nio.file.Files
 
+/**
+ * how to retrieve and update data into file
+ * This class must know real file path(?)
+ * This class must not manipulate file data
+ */
 class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
-  private val DB_PATH = "./db_files"
+  private val DB_PATH = "./db_files" // TODO Should be inserted from outside
 //  private var fileMapper: FileMapper<DatabaseInformation> = JavaObjectMapper()
   private var fileMapper: SingleFileRepository<DatabaseInformation> = YamlFileMapper()
   private var queryCompiler = QueryCompiler()
@@ -75,6 +80,7 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
       val recipe = syntax.recipe.get() as SelectQueryRecipe
       val resultRecords = selectQuery(session, recipe)
       val mapper = ObjectMapper()
+      // TODO should be Protocol Buffer
       val json = mapper.writeValueAsString(resultRecords)
       return resultBuilder.setMessage(json).build()
     }
@@ -131,7 +137,7 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
     val path = session.dbPath.resolve("db.info")
     fileMapper.storeObject(path.toFile(), dbInfo)
 
-    Files.createFile(session.dbPath.resolve(table.fileName))
+    tableMapper.build(table, session.dbPath.resolve(table.fileName).toString()).createTable()
 
     return "ok\n"
   }

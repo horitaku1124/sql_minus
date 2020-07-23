@@ -9,4 +9,5 @@ interface TableMapper : AutoCloseable {
   fun select(columns: List<String>): List<Record>
   fun update(record: Record)
   fun delete(record: Record)
+  fun createTable()
 }
