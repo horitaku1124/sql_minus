@@ -1,6 +1,7 @@
 package com.github.horitaku1124.kotlin.sql_minus.dialect_o.repositories
 
 import com.github.horitaku1124.kotlin.sql_minus.ColumnType
+import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
 import com.github.horitaku1124.kotlin.sql_minus.TableMapper
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Column
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Record
@@ -70,6 +71,9 @@ open class TableFileMapper(private var tableJournal: TableJournal,
           recordBuffer.position(recordBuffer.position() + col.length!!)
         } else {
           val bytes = cell.textValue!!.toByteArray()
+          if (bytes.size > col.length!!) {
+            throw DBRuntimeException("exceed size")
+          }
           recordBuffer.put(bytes)
           recordBuffer.position(recordBuffer.position() + col.length!! - bytes.size)
         }
