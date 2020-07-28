@@ -107,6 +107,9 @@ open class TableFileMapper(private var tableJournal: TableJournal,
   }
 
   override fun insert(columns: List<String>, record: Record) {
+    if (columns.size < record.cells.size) {
+      throw DBRuntimeException("columns.size < record.cells.size")
+    }
     val colToCellMap = HashMap<String, RecordCell>().also {
       for (i in columns.indices) {
         it[columns[i]] = record.cells[i]
@@ -135,6 +138,7 @@ open class TableFileMapper(private var tableJournal: TableJournal,
   override fun select(columns: List<String>): List<Record> {
     val list = arrayListOf<Record>()
     RandomAccessFile(File(filePath), "r").use { ro ->
+
       val buf = ByteArray(RecordLength)
       var filePosition = 0L
 
@@ -144,7 +148,7 @@ open class TableFileMapper(private var tableJournal: TableJournal,
 
         var deleted = false
         val recordBuff = ByteBuffer.wrap(buf).also {
-//          var b0 = it.get().toInt()
+          var b0 = it.get().toInt()
           var b1 = it.get().toInt()
           if (b1 == 0b01) {
             deleted = true

@@ -20,7 +20,7 @@ class TableFileMapperTests {
   inner class IntInsert {
     private lateinit var tableMapper: TableFileMapper
     private lateinit var createTempFile: Path
-    val cols = listOf("id")
+    private val cols = listOf("id")
 
     @BeforeEach
     fun before() {
@@ -109,7 +109,7 @@ class TableFileMapperTests {
   inner class VaryInsert {
     private lateinit var tableMapper: TableFileMapper
     private lateinit var createTempFile: Path
-    val cols = listOf("id", "name", "status")
+    private val cols = listOf("id", "name", "status")
     @BeforeEach
     fun before() {
       val tableJournal = TableJournal("tb1")
@@ -132,7 +132,6 @@ class TableFileMapperTests {
       createTempFile = Files.createTempFile("test_", ".table")
       tableMapper = TableFileMapper(tableJournal, createTempFile.toString())
     }
-
 
     @Test
     fun oneRecord() {
@@ -187,6 +186,195 @@ class TableFileMapperTests {
 
         val allByte = Files.readAllBytes(createTempFile)
       }
+    }
+  }
+
+  @Nested
+  inner class SelectRecord {
+    private lateinit var tableMapper: TableFileMapper
+    private lateinit var createTempFile: Path
+    private val cols = listOf("id", "name", "status")
+    @BeforeEach
+    fun before() {
+      val tableJournal = TableJournal("tb1")
+      tableJournal.columns = arrayListOf(
+        Column().also {
+          it.name = "id"
+          it.type = ColumnType.INT
+        },
+        Column().also {
+          it.name = "name"
+          it.type = ColumnType.VARCHAR
+          it.length = 10
+        },
+        Column().also {
+          it.name = "status"
+          it.type = ColumnType.SMALLINT
+        }
+      )
+
+      createTempFile = Files.createTempFile("test_", ".table")
+      tableMapper = TableFileMapper(tableJournal, createTempFile.toString())
+    }
+
+    @Test
+    fun oneRecord() {
+      tableMapper.insert(cols, Record().also {
+        it.cells = arrayListOf(
+          RecordCell(ColumnType.INT, "123"),
+          RecordCell(ColumnType.VARCHAR, "abc"),
+          RecordCell(ColumnType.SMALLINT, "1")
+        )
+      })
+
+      val records = tableMapper.select(listOf())
+
+      assertEquals(1, records.size)
+      records[0].let { record ->
+        assertEquals(123, record.cells[0].intValue)
+        assertEquals("abc", record.cells[1].textValue)
+        assertEquals(1, record.cells[2].intValue)
+      }
+    }
+    @Test
+    fun threeRecords() {
+      tableMapper.insert(cols, Record().also {
+        it.cells = arrayListOf(
+          RecordCell(ColumnType.INT, "1001"),
+          RecordCell(ColumnType.VARCHAR, "abc"),
+          RecordCell(ColumnType.SMALLINT, "1")
+        )
+      })
+      tableMapper.insert(cols, Record().also {
+        it.cells = arrayListOf(
+          RecordCell(ColumnType.INT, "1002"),
+          RecordCell(ColumnType.VARCHAR, "def"),
+          RecordCell(ColumnType.SMALLINT, "2")
+        )
+      })
+      tableMapper.insert(cols, Record().also {
+        it.cells = arrayListOf(
+          RecordCell(ColumnType.INT, "1003"),
+          RecordCell(ColumnType.VARCHAR, "ghi"),
+          RecordCell(ColumnType.SMALLINT, "3")
+        )
+      })
+
+      val records = tableMapper.select(listOf())
+
+      assertEquals(3, records.size)
+      records[0].let { record ->
+        assertEquals(1001, record.cells[0].intValue)
+        assertEquals("abc", record.cells[1].textValue)
+        assertEquals(1, record.cells[2].intValue)
+      }
+      records[1].let { record ->
+        assertEquals(1002, record.cells[0].intValue)
+        assertEquals("def", record.cells[1].textValue)
+        assertEquals(2, record.cells[2].intValue)
+      }
+      records[2].let { record ->
+        assertEquals(1003, record.cells[0].intValue)
+        assertEquals("ghi", record.cells[1].textValue)
+        assertEquals(3, record.cells[2].intValue)
+      }
+    }
+  }
+
+  @Nested
+  inner class UpdateRecord {
+    private lateinit var tableMapper: TableFileMapper
+    private lateinit var createTempFile: Path
+    private val cols = listOf("id", "name", "status")
+    @BeforeEach
+    fun before() {
+      val tableJournal = TableJournal("tb1")
+      tableJournal.columns = arrayListOf(
+        Column().also {
+          it.name = "id"
+          it.type = ColumnType.INT
+        },
+        Column().also {
+          it.name = "name"
+          it.type = ColumnType.VARCHAR
+          it.length = 10
+        },
+        Column().also {
+          it.name = "status"
+          it.type = ColumnType.SMALLINT
+        }
+      )
+
+      createTempFile = Files.createTempFile("test_", ".table")
+      tableMapper = TableFileMapper(tableJournal, createTempFile.toString())
+    }
+
+    @Test
+    fun oneRecord() {
+      tableMapper.insert(cols, Record().also {
+        it.cells = arrayListOf(
+          RecordCell(ColumnType.INT, "123"),
+          RecordCell(ColumnType.VARCHAR, "abc"),
+          RecordCell(ColumnType.SMALLINT, "1")
+        )
+      })
+
+      val records = tableMapper.select(listOf())
+
+      assertEquals(1, records.size)
+
+      records[0].let { record ->
+        record.cells[1].textValue = "ABCDEFG"
+        tableMapper.update(record)
+      }
+
+      val records1 = tableMapper.select(listOf())
+
+      assertEquals(1, records1.size)
+      records1[0].let { record ->
+        assertEquals(123, record.cells[0].intValue)
+        assertEquals("ABCDEFG", record.cells[1].textValue)
+        assertEquals(1, record.cells[2].intValue)
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteRecord {
+    private lateinit var tableMapper: TableFileMapper
+    private lateinit var createTempFile: Path
+    private val cols = listOf("id")
+    @BeforeEach
+    fun before() {
+      val tableJournal = TableJournal("tb1")
+      tableJournal.columns = arrayListOf(
+        Column().also {
+          it.name = "id"
+          it.type = ColumnType.INT
+        }
+      )
+
+      createTempFile = Files.createTempFile("test_", ".table")
+      tableMapper = TableFileMapper(tableJournal, createTempFile.toString())
+    }
+
+    @Test
+    fun oneRecord() {
+      tableMapper.insert(cols, Record().also {
+        it.cells = arrayListOf(
+          RecordCell(ColumnType.INT, "123")
+        )
+      })
+
+      val records = tableMapper.select(listOf())
+
+      assertEquals(1, records.size)
+
+      tableMapper.delete(records[0])
+
+      val records1 = tableMapper.select(listOf())
+
+      assertEquals(0, records1.size)
     }
   }
 }
