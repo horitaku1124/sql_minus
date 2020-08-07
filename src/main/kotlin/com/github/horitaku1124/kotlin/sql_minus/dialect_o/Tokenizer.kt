@@ -181,6 +181,12 @@ class Tokenizer {
             col.numberFormat = Pair(partsInParen[0].toInt(), partsInParen[1].toInt())
           }
         }
+        "timestamp" -> {
+          col.type = ColumnType.TIMESTAMP
+        }
+        "date" -> {
+          col.type = ColumnType.DATE
+        }
       }
       recipe.columns.add(col)
     }

@@ -6,6 +6,7 @@ enum class ColumnType {
   VARCHAR,
   CHAR,
   TIMESTAMP,
+  DATE,
   NUMBER,
   SMALLINT
 }

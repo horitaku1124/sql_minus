@@ -207,6 +207,38 @@ class TokenizerTests {
     }
   }
   @Test
+  fun createTable3CanBeParsed() {
+    val sql = """
+      create table tb3 (
+          id int,
+          created_at timestamp,
+          updated_at date
+      )
+    """.trimIndent()
+
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      println(tokens)
+      val st = tn.parse(tokens)
+
+      assertEquals(1, st.size)
+      st[0].let { syntax ->
+        assertEquals(QueryType.CREATE_TABLE, syntax.type)
+        assertEquals("tb3", syntax.subject)
+        val recipe = syntax.recipe.get() as CreateTableRecipe
+
+        assertEquals(3, recipe.columns.size)
+        assertEquals("id", recipe.columns[0].name)
+        assertEquals("created_at", recipe.columns[1].name)
+        assertEquals("updated_at", recipe.columns[2].name)
+        assertEquals(ColumnType.INT, recipe.columns[0].type)
+        assertEquals(ColumnType.TIMESTAMP, recipe.columns[1].type)
+        assertEquals(ColumnType.DATE, recipe.columns[2].type)
+      }
+    }
+  }
+  @Test
   fun insertInto2CanBeParsed() {
     val sql = "insert into tb2(id, name) values (123, 'abcde')"
 
