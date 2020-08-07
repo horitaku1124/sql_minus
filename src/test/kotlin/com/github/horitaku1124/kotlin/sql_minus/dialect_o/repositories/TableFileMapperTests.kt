@@ -47,8 +47,8 @@ class TableFileMapperTests {
       val allByte = Files.readAllBytes(createTempFile)
       // Header:2 + NullFlags:1 + Int:4 = 7Byte
       assertEquals(7, allByte.size)
-      assertEquals(0, allByte[2])
-      assertEquals(100, allByte[6])
+      assertEquals(0, allByte[2]) // Is Not Null
+      assertEquals(100, allByte[6]) // value
     }
     @Test
     fun threeRecord() {
@@ -90,17 +90,17 @@ class TableFileMapperTests {
       })
       tableMapper.insert(cols, Record().also {
         it.cells = arrayListOf(
-          RecordCell(ColumnType.NULL, "")
+          RecordCell(ColumnType.NULL)
         )
       })
 
       val allByte = Files.readAllBytes(createTempFile)
       // (Header:2 + NullFlags:1 + Int:4) * 2 = 14Byte
       assertEquals(14, allByte.size)
-      assertEquals(0, allByte[2])
-      assertEquals(1, allByte[6])
+      assertEquals(0, allByte[2]) // Is Not Null
+      assertEquals(1, allByte[6]) // Value
 
-      assertEquals(0b1000_0000, allByte[9].toInt().and(255))
+      assertEquals(0b1000_0000, allByte[9].toInt().and(255)) // Is Null
 
     }
   }
