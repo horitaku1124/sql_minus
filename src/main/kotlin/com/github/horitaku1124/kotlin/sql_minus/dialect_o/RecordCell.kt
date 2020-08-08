@@ -4,17 +4,19 @@ import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.ColumnType.*
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.LocalDate.ofEpochDay
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.format.ResolverStyle
 
 class RecordCell{
   companion object {
     private val dateFormat = DateTimeFormatter
-      .ofPattern("yyyy-MM-dd")
+      .ofPattern("uuuu-MM-dd")
+      .withResolverStyle(ResolverStyle.STRICT)
     private val timestampFormat = DateTimeFormatter
-      .ofPattern("yyyy-MM-dd HH:mm:ss")
+      .ofPattern("uuuu-MM-dd HH:mm:ss")
+      .withResolverStyle(ResolverStyle.STRICT)
   }
 
   var type: ColumnType = NULL
