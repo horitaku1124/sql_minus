@@ -26,11 +26,11 @@ class BinaryBuffer(private var bools: Array<Boolean>) {
   }
 
   fun toBytes(): ByteArray {
-    val octect = octetOf(bools.size)
+    val octet = octetOf(bools.size)
 
-    val buff = Array<Byte>(octect){0}
+    val buff = Array<Byte>(octet){0}
     var index = 0
-    for (i in 0 until octect) {
+    for (i in 0 until octet) {
       var bit = 0
       for (j in 0 until 8) {
         bit = bit shl 1

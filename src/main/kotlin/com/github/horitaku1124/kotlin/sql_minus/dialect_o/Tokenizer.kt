@@ -8,6 +8,8 @@ import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.*
 import java.util.*
 
 class Tokenizer {
+  private val typeAnnotations = listOf("timestamp", "date")
+
   fun parse(tokens: List<String>):List<SyntaxTree> {
     val syntaxTrees = arrayListOf<SyntaxTree>()
 
@@ -227,6 +229,19 @@ class Tokenizer {
 
         if (value.startsWith("'")) {
           record.cells.add(RecordCell(ColumnType.VARCHAR, value.substring(1, value.length - 1)))
+        } else if (typeAnnotations.contains(value.toLowerCase())) {
+          val annotation = value.toLowerCase()
+          val value2 = tokens[index++]
+          if (value2.startsWith("'")) {
+            val strValue = value2.substring(1, value2.length - 1)
+            if (annotation == "timestamp") {
+              record.cells.add(RecordCell(ColumnType.TIMESTAMP, strValue))
+            } else if (annotation == "date") {
+              record.cells.add(RecordCell(ColumnType.DATE, strValue))
+            }
+          } else {
+            throw DBRuntimeException("annotated value parse error")
+          }
         } else if (value.contains('.')) {
           record.cells.add(RecordCell(ColumnType.VARCHAR, value))
         } else {

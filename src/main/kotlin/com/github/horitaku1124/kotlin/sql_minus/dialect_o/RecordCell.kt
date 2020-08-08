@@ -3,8 +3,20 @@ package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.ColumnType.*
 import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.LocalDate.ofEpochDay
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 class RecordCell{
+  companion object {
+    private val dateFormat = DateTimeFormatter
+      .ofPattern("yyyy-MM-dd")
+    private val timestampFormat = DateTimeFormatter
+      .ofPattern("yyyy-MM-dd HH:mm:ss")
+  }
+
   var type: ColumnType = NULL
   var isNull = true
   var intValue: Int? = null
@@ -22,15 +34,40 @@ class RecordCell{
   }
   constructor(type: ColumnType, value: String) {
     this.type = type
-    if (type == INT) {
-      intValue = value.toInt()
-      isNull = intValue == null
-    } else if (type == SMALLINT) {
-      intValue = value.toShort().toInt()
-      isNull = intValue == null
-    } else if (type == VARCHAR) {
-      textValue = value
-      isNull = textValue == null
+    when (type) {
+      INT -> {
+        intValue = value.toInt()
+        isNull = intValue == null
+      }
+      SMALLINT -> {
+        intValue = value.toShort().toInt()
+        isNull = intValue == null
+      }
+      VARCHAR,CHAR -> {
+        textValue = value
+        isNull = textValue == null
+      }
+      TIMESTAMP -> {
+        val date = LocalDateTime.parse(value, timestampFormat)
+        intValue = date.toEpochSecond(ZoneOffset.UTC).toInt()
+        isNull = false
+      }
+      DATE -> {
+        val date = LocalDate.parse(value, dateFormat)
+        intValue = date.toEpochDay().toInt()
+        isNull = false
+      }
+      NUMBER -> TODO()
+      else -> {
+        isNull = true
+      }
     }
+  }
+
+  fun getDateValue(): LocalDate {
+    return LocalDate.ofEpochDay(intValue!!.toLong())
+  }
+  fun getTimeStampValue(): LocalDateTime {
+    return LocalDateTime.ofEpochSecond(intValue!!.toLong(), 0, ZoneOffset.UTC)
   }
 }

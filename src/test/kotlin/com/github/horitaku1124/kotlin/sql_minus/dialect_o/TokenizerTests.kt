@@ -290,6 +290,32 @@ class TokenizerTests {
       }
     }
   }
+  @Test
+  fun insertInto4CanBeParsed() {
+    val sql = "insert into tb3(id,created_at,updated_at) values (1, timestamp '2020-10-31 12:45:32', date '1951-09-22');"
+    val qp = QueryParser()
+    val tn = Tokenizer()
+    qp.lexicalAnalysis(sql).let { tokens ->
+      println(tokens)
+      val st = tn.parse(tokens)
+      assertEquals(1, st.size)
+      st[0].let { syntax ->
+        assertEquals("tb3", syntax.subject)
+        val recipe = syntax.recipe.get() as InsertIntoRecipe
+
+        assertEquals(3, recipe.columns.size)
+        assertEquals("id", recipe.columns[0])
+        assertEquals("created_at", recipe.columns[1])
+        assertEquals("updated_at", recipe.columns[2])
+        assertEquals(1, recipe.records.size)
+        assertEquals(3, recipe.records[0].cells.size)
+        assertEquals(ColumnType.INT, recipe.records[0].cells[0].type)
+        assertEquals(1, recipe.records[0].cells[0].intValue)
+        assertEquals(ColumnType.TIMESTAMP, recipe.records[0].cells[1].type)
+        assertEquals(ColumnType.DATE, recipe.records[0].cells[2].type)
+      }
+    }
+  }
 
   @Test
   fun select1CanBeParsed() {

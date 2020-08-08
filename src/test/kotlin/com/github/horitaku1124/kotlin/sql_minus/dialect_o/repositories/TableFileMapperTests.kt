@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 
 class TableFileMapperTests {
@@ -102,6 +104,72 @@ class TableFileMapperTests {
 
       assertEquals(0b1000_0000, allByte[9].toInt().and(255)) // Is Null
 
+    }
+  }
+
+  @Nested
+  inner class DateInsert {
+    private lateinit var tableMapper: TableFileMapper
+    private lateinit var createTempFile: Path
+    private val cols = listOf("id", "created_at", "updated_at")
+
+    @BeforeEach
+    fun before() {
+      val tableJournal = TableJournal("tb1")
+      tableJournal.columns = arrayListOf(
+        Column().also {
+          it.name = "id"
+          it.type = ColumnType.INT
+        },
+        Column().also {
+          it.name = "created_at"
+          it.type = ColumnType.TIMESTAMP
+        },
+        Column().also {
+          it.name = "updated_at"
+          it.type = ColumnType.DATE
+        }
+      )
+
+      createTempFile = Files.createTempFile("test_", ".table")
+      tableMapper = TableFileMapper(tableJournal, createTempFile.toString())
+    }
+
+    @Test
+    fun oneRecord() {
+      tableMapper.insert(cols, Record().also {
+        it.cells = arrayListOf(
+          RecordCell(ColumnType.INT, "100"),
+          RecordCell(ColumnType.TIMESTAMP, "2020-10-31 12:45:32"),
+          RecordCell(ColumnType.DATE, "1951-09-22")
+        )
+      })
+
+      val allByte = Files.readAllBytes(createTempFile)
+      // Header:2 + NullFlags:1 + Int:4 + Timestamp-Int:4 + Date-Int:4 = 15Byte
+      assertEquals(15, allByte.size)
+      assertEquals(0, allByte[2]) // Is Not Null
+      assertEquals(100, allByte[6]) // value
+    }
+
+    @Test
+    fun selectOneRecord() {
+      tableMapper.insert(cols, Record().also {
+        it.cells = arrayListOf(
+          RecordCell(ColumnType.INT, "100"),
+          RecordCell(ColumnType.TIMESTAMP, "2020-10-31 12:45:32"),
+          RecordCell(ColumnType.DATE, "1951-09-22")
+        )
+      })
+
+      val records = tableMapper.select(listOf())
+      assertEquals(1, records.size)
+      records[0].let { record ->
+        assertEquals(100, record.cells[0].intValue)
+        assertEquals(LocalDateTime.of(2020, 10, 31, 12, 45, 32),
+          record.cells[1].getTimeStampValue())
+        assertEquals(LocalDate.of(1951, 9, 22), record.cells[2].getDateValue())
+      }
     }
   }
 

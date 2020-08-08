@@ -25,7 +25,7 @@ open class TableFileMapper(private var tableJournal: TableJournal,
     NullFlagsLength = BinaryBuffer.octetOf(tableJournal.columns.size)
     recordLength += NullFlagsLength
     tableJournal.columns.forEach { col ->
-      if (col.type == ColumnType.INT) {
+      if (col.type == ColumnType.INT || col.type == ColumnType.TIMESTAMP || col.type == ColumnType.DATE) {
         recordLength += 4
       } else if (col.type == ColumnType.VARCHAR) {
         recordLength += col.length!!
@@ -60,7 +60,13 @@ open class TableFileMapper(private var tableJournal: TableJournal,
       if (map.containsKey(col.name)) {
         cell = map[col.name]
       }
-      if (col.type == ColumnType.INT) {
+      if (col.type == ColumnType.INT || col.type == ColumnType.DATE) {
+        if (cell == null || cell.isNull) {
+          recordBuffer.putInt(0)
+        } else {
+          recordBuffer.putInt(cell.intValue!!)
+        }
+      } else if (col.type == ColumnType.TIMESTAMP) {
         if (cell == null || cell.isNull) {
           recordBuffer.putInt(0)
         } else {
@@ -172,9 +178,19 @@ open class TableFileMapper(private var tableJournal: TableJournal,
 
           if (col.type == ColumnType.INT) {
             cell = RecordCell(
-              ColumnType.INT,
-              recordBuff.int.toString()
+              ColumnType.INT, recordBuff.int.toString()
             )
+//            cell.intValue = recordBuff.int
+          } else if (col.type == ColumnType.TIMESTAMP) {
+            cell = RecordCell(
+              ColumnType.TIMESTAMP
+            )
+            cell.intValue = recordBuff.int
+          } else if (col.type == ColumnType.DATE) {
+            cell = RecordCell(
+              ColumnType.DATE
+            )
+            cell.intValue = recordBuff.int
           } else if (col.type == ColumnType.VARCHAR) {
             val buf2 = ByteArray(col.length!!)
             recordBuff.get(buf2)
