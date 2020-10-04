@@ -2,6 +2,7 @@ package com.github.horitaku1124.kotlin.sql_minus.dialect_o.repositories
 
 import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
+import com.github.horitaku1124.kotlin.sql_minus.IRecord
 import com.github.horitaku1124.kotlin.sql_minus.TableMapper
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Column
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Record
@@ -112,7 +113,8 @@ open class TableFileMapper(private var tableJournal: TableJournal,
     return recordBuffer
   }
 
-  override fun insert(columns: List<String>, record: Record) {
+  override fun insert(columns: List<String>, _record: IRecord) {
+    val record = _record as Record
     if (columns.size < record.cells.size) {
       throw DBRuntimeException("columns.size < record.cells.size")
     }
@@ -237,7 +239,8 @@ open class TableFileMapper(private var tableJournal: TableJournal,
     return list
   }
 
-  override fun update(record: Record) {
+  override fun update(_record: IRecord) {
+    val record = _record as Record
     val nameToCellMap = HashMap<String, RecordCell>().also {
       for (i in tableJournal.columns.indices) {
         it[tableJournal.columns[i].name] = record.cells[i]
@@ -252,7 +255,8 @@ open class TableFileMapper(private var tableJournal: TableJournal,
     }
   }
 
-  override fun delete(record: Record) {
+  override fun delete(_record: IRecord) {
+    val record = _record as Record
     println("position=" + record.position)
     RandomAccessFile(File(filePath), "rw").use { ro ->
       ro.skipBytes(record.position!!.toInt())

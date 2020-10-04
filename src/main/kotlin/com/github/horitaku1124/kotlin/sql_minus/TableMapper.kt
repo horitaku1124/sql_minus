@@ -1,13 +1,10 @@
 package com.github.horitaku1124.kotlin.sql_minus
 
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Column
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Record
-
 interface TableMapper : AutoCloseable {
-  fun insert(columns: List<String>, record: Record)
-  fun columns(): List<Column>
-  fun select(columns: List<String>): List<Record>
-  fun update(record: Record)
-  fun delete(record: Record)
+  fun insert(columns: List<String>, record: IRecord)
+  fun columns(): List<IColumn>
+  fun select(columns: List<String>): List<IRecord>
+  fun update(record: IRecord)
+  fun delete(record: IRecord)
   fun createTable()
 }

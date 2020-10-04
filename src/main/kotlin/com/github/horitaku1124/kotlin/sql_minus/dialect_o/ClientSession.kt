@@ -1,6 +1,5 @@
-package com.github.horitaku1124.kotlin.sql_minus
+package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
-import com.github.horitaku1124.kotlin.sql_minus.dialect_o.DatabaseInformation
 import java.nio.file.Path
 import java.util.*
 

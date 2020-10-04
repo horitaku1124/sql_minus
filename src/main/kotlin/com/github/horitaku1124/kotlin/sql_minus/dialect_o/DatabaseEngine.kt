@@ -1,9 +1,7 @@
 package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 
-import com.github.horitaku1124.kotlin.sql_minus.ClientSession
 import com.github.horitaku1124.kotlin.sql_minus.ColumnType
 import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
-import com.github.horitaku1124.kotlin.sql_minus.SyntaxTree
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.QueryType.*
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.SelectQueryRecipe
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.repositories.SingleFileRepository

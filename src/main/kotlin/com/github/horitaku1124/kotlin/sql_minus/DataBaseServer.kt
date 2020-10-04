@@ -1,5 +1,6 @@
 package com.github.horitaku1124.kotlin.sql_minus
 
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.ClientSession
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.DatabaseEngine
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.SystemTableFileMapperBuilder
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.Tokenizer
