@@ -7,6 +7,9 @@ import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.SelectQueryRec
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.repositories.SingleFileRepository
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.repositories.YamlFileMapper
 
+/**
+ * TODO Merge to DatabaseEngineCore
+ */
 class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
   private val DB_PATH = "./db_files"
 //  private var fileMapper: FileMapper<DatabaseInformation> = JavaObjectMapper()
