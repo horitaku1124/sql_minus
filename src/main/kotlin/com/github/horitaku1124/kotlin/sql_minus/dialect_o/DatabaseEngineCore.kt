@@ -25,7 +25,7 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
   private var queryCompiler = QueryCompiler()
 
   fun execute(
-    syntax: SyntaxTree,
+    syntax: QueryRecipe,
     session: ClientSession
   ): ExecuteResult {
     val resultBuilder = ExecuteResultBuilder.builder()

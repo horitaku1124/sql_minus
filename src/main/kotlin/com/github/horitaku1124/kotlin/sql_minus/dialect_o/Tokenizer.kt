@@ -9,18 +9,18 @@ import java.util.*
 class Tokenizer {
   private val typeAnnotations = listOf("timestamp", "date")
 
-  fun parse(tokens: List<String>):List<SyntaxTree> {
-    val syntaxTrees = arrayListOf<SyntaxTree>()
+  fun parse(tokens: List<String>):List<QueryRecipe> {
+    val syntaxTrees = arrayListOf<QueryRecipe>()
 
     var index = 0
     while (index < tokens.size) {
       val startToken = tokens[index++].toLowerCase()
-      var syntax: SyntaxTree
+      var syntax: QueryRecipe
       when (startToken) {
         "create" -> {
           when (val objective = tokens[index++].toLowerCase()) {
             "database" -> {
-              syntax = SyntaxTree(CREATE_DATABASE)
+              syntax = QueryRecipe(CREATE_DATABASE)
               val subject = tokens[index++]
               syntax.subject = subject
             }
@@ -35,7 +35,7 @@ class Tokenizer {
           }
         }
         "connect" -> {
-          syntax = SyntaxTree(CHANGE_DATABASE)
+          syntax = QueryRecipe(CHANGE_DATABASE)
           syntax.subject = tokens[index++].toLowerCase()
         }
         "show" -> {
@@ -43,7 +43,7 @@ class Tokenizer {
           if (objective != "tables") {
             throw DBRuntimeException("unrecognized command => $objective")
           }
-          syntax = SyntaxTree(SHOW_TABLES)
+          syntax = QueryRecipe(SHOW_TABLES)
         }
         "insert" -> {
           val objective = tokens[index++].toLowerCase()
@@ -62,7 +62,7 @@ class Tokenizer {
         "drop" -> {
           val objective = tokens[index++].toLowerCase()
           if (objective == "table") {
-            syntax = SyntaxTree(DROP_TABLE)
+            syntax = QueryRecipe(DROP_TABLE)
             val subject = tokens[index++]
             syntax.subject = subject
           } else {
@@ -94,8 +94,8 @@ class Tokenizer {
     return syntaxTrees
   }
 
-  private fun parseCreateTable(tokens: List<String>, startIndex: Int): Pair<SyntaxTree, Int> {
-    val syntax = SyntaxTree(CREATE_TABLE)
+  private fun parseCreateTable(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int> {
+    val syntax = QueryRecipe(CREATE_TABLE)
     var index = startIndex
     syntax.subject = tokens[index++]
     val parenthesis = tokens[index++]
@@ -195,9 +195,9 @@ class Tokenizer {
     return Pair(syntax, index)
   }
 
-  private fun parseInsertTable(tokens: List<String>, startIndex: Int): Pair<SyntaxTree, Int> {
+  private fun parseInsertTable(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int> {
     var index = startIndex
-    val syntax = SyntaxTree(INSERT_QUERY)
+    val syntax = QueryRecipe(INSERT_QUERY)
     syntax.subject = tokens[index++]
     if (tokens[index++] != "(") {
       throw DBRuntimeException("error")
@@ -258,8 +258,8 @@ class Tokenizer {
     return Pair(syntax, index)
   }
 
-  private fun parseSelect(tokens: List<String>, startIndex: Int): Pair<SyntaxTree, Int>  {
-    val syntax = SyntaxTree(SELECT_QUERY)
+  private fun parseSelect(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int>  {
+    val syntax = QueryRecipe(SELECT_QUERY)
     var index = startIndex
     var selectParts = arrayListOf<String>()
     var token = tokens[index++]
@@ -320,10 +320,82 @@ class Tokenizer {
     return Pair(syntax, index)
   }
 
-  private fun parseUpdate(tokens: List<String>, startIndex: Int): Pair<SyntaxTree, Int> {
+
+  public fun parseSelect2(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int>  {
+    val syntax = QueryRecipe(SELECT_QUERY2)
+    var recipe = SelectInvocationRecipe()
+
+    var index = startIndex
+    var selectParts = arrayListOf<String>()
+    var token = tokens[index++]
+    var nextToken: String? = null
+    while (index < tokens.size) {
+      selectParts.add(token)
+      val next = tokens[index++]
+      if (next == ",") {
+        token = tokens[index++]
+        continue
+      }
+      nextToken = next
+      break
+    }
+    if (nextToken == null || nextToken.toLowerCase() != "from") {
+      throw DBRuntimeException("no from syntax")
+    }
+    val fromParts = arrayListOf<String>()
+    fromParts.add(tokens[index++])
+
+
+    var whereTree = WhereRecipes()
+    while (index < tokens.size) {
+      var remainNum = tokens.size - index
+      if (remainNum > 0) {
+        nextToken = tokens[index++]
+        if (nextToken.toLowerCase() == "where") {
+          remainNum--
+          while(remainNum > 0) {
+            if (remainNum > 2) {
+              var subject = tokens[index++]
+              var operator = tokens[index++]
+              var objective = tokens[index++]
+              remainNum = remainNum - 3
+              whereTree.expression.add(subject)
+              whereTree.expression.add(operator)
+              whereTree.expression.add(objective)
+
+              if (remainNum > 0) {
+                nextToken = tokens[index++].toLowerCase()
+                remainNum--
+                if (nextToken == "and" || nextToken == "or") {
+                  whereTree.expression.add(nextToken)
+                }
+              }
+            }
+          }
+        }
+      } else {
+        break
+      }
+    }
+
+
+    // Enclosing
+    for (from in fromParts) {
+      recipe.tasks.add(SelectInvocationRecipe.TableReadTask(from))
+    }
+    if (whereTree.expression.size > 0) {
+      recipe.tasks.add(SelectInvocationRecipe.FilteringTask(whereTree))
+    }
+    recipe.tasks.add(SelectInvocationRecipe.SelectionTask(selectParts))
+
+    syntax.recipe = Optional.of(recipe)
+    return Pair(syntax, index)
+  }
+
+  private fun parseUpdate(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int> {
     var recipe = UpdateQueryRecipe()
     var index = startIndex
-    val syntax = SyntaxTree(UPDATE_QUERY)
+    val syntax = QueryRecipe(UPDATE_QUERY)
     recipe.targetTable = tokens[index++]
 
     if (tokens[index++] != "set") {
@@ -366,10 +438,10 @@ class Tokenizer {
     return Pair(syntax, index)
   }
 
-  private fun parseDelete(tokens: List<String>, startIndex: Int): Pair<SyntaxTree, Int> {
+  private fun parseDelete(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int> {
     var recipe = DeleteQueryRecipe()
     var index = startIndex
-    val syntax = SyntaxTree(DELETE_QUERY)
+    val syntax = QueryRecipe(DELETE_QUERY)
     if (tokens[index++].toLowerCase() != "from") {
       throw DBRuntimeException("error => " + (tokens[index - 1]))
     }

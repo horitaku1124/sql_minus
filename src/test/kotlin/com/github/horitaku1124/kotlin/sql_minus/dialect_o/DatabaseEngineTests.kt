@@ -34,7 +34,7 @@ class DatabaseEngineTests {
 
   @Test
   fun test1() {
-    val syntax = SyntaxTree(QueryType.SELECT_QUERY)
+    val syntax = QueryRecipe(QueryType.SELECT_QUERY)
     val recipe = SelectQueryRecipe()
     recipe.fromParts = arrayListOf("tb1")
     syntax.recipe = Optional.of(recipe)
