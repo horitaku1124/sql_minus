@@ -55,7 +55,7 @@ class Tokenizer {
           index = ret.second
         }
         "select" -> {
-          val ret = parseSelect2(tokens, index)
+          val ret = parseSelect(tokens, index)
           syntax = ret.first
           index = ret.second
         }
@@ -258,71 +258,8 @@ class Tokenizer {
     return Pair(syntax, index)
   }
 
-  private fun parseSelect(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int>  {
+  public fun parseSelect(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int>  {
     val syntax = QueryRecipe(SELECT_QUERY)
-    var index = startIndex
-    var selectParts = arrayListOf<String>()
-    var token = tokens[index++]
-    var nextToken: String? = null
-    while (index < tokens.size) {
-      selectParts.add(token)
-      val next = tokens[index++]
-      if (next == ",") {
-        token = tokens[index++]
-        continue
-      }
-      nextToken = next
-      break
-    }
-    if (nextToken == null || nextToken.toLowerCase() != "from") {
-      throw DBRuntimeException("no from syntax")
-    }
-    val fromParts = arrayListOf<String>()
-    fromParts.add(tokens[index++])
-
-    val selectRecipe = SelectQueryRecipe()
-    while (index < tokens.size) {
-      var remainNum = tokens.size - index
-      if (remainNum > 0) {
-        nextToken = tokens[index++]
-        if (nextToken.toLowerCase() == "where") {
-          remainNum--
-          while(remainNum > 0) {
-            if (remainNum > 2) {
-              var subject = tokens[index++]
-              var operator = tokens[index++]
-              var objective = tokens[index++]
-              remainNum = remainNum - 3
-              selectRecipe.whereTree.expression.add(subject)
-              selectRecipe.whereTree.expression.add(operator)
-              selectRecipe.whereTree.expression.add(objective)
-
-              if (remainNum > 0) {
-                nextToken = tokens[index++].toLowerCase()
-                remainNum--
-                if (nextToken == "and" || nextToken == "or") {
-                  selectRecipe.whereTree.expression.add(nextToken)
-                }
-              }
-            }
-          }
-        }
-      } else {
-        break
-      }
-    }
-
-    selectRecipe.selectParts = selectParts
-    selectRecipe.fromParts = fromParts
-
-    syntax.recipe = Optional.of(selectRecipe)
-
-    return Pair(syntax, index)
-  }
-
-
-  public fun parseSelect2(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int>  {
-    val syntax = QueryRecipe(SELECT_QUERY2)
     var recipe = SelectInvocationRecipe()
 
     var index = startIndex

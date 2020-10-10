@@ -79,16 +79,8 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
       return resultBuilder.setMessage(message).build()
     }
     if (syntax.type == SELECT_QUERY) {
-      val recipe = syntax.recipe.get() as SelectQueryRecipe
+      val recipe = syntax.recipe.get() as SelectInvocationRecipe
       val resultRecords = selectQuery(session, recipe)
-      val mapper = ObjectMapper()
-      // TODO should be Protocol Buffer
-      val json = mapper.writeValueAsString(resultRecords)
-      return resultBuilder.setMessage(json).build()
-    }
-
-    if (syntax.type == SELECT_QUERY2) {
-      val resultRecords = selectQuery2(session, syntax.recipe.get() as SelectInvocationRecipe)
       val mapper = ObjectMapper()
       // TODO should be Protocol Buffer
       val json = mapper.writeValueAsString(resultRecords)
@@ -193,79 +185,7 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
     return "OK\n"
   }
 
-  private fun selectQuery(session: ClientSession, recipe: SelectQueryRecipe): List<Map<String, String>> {
-    val dbInfo = chooseDatabase(session)
-
-    val selectParts = recipe.selectParts
-    val fromParts = recipe.fromParts
-    val tableName = fromParts[0]
-
-    val result = dbInfo.tables.filter { tb ->
-      tb.name == tableName
-    }
-    if (result.isEmpty()) {
-      throw DBRuntimeException("table doesn't exist -> ${tableName}")
-    }
-    val table = result[0]
-
-    val tableFile = session.dbPath.resolve(table.fileName).toFile()
-    if (!tableFile.exists()) {
-      throw DBRuntimeException("table journal is gone")
-    }
-    println(tableFile.absolutePath)
-
-    // TODO make it loose couple
-    tableMapper.build(table, tableFile.absolutePath).use { tableMapper ->
-      val columns = tableMapper.columns()
-      val shows = arrayListOf<Int>()
-      if (selectParts.size == 1 && selectParts[0] == "*") {
-        for (i in columns.indices) {
-          shows.add(i)
-        }
-      } else {
-        for (i in 0 until columns.size) {
-          val name = columns[i].name
-          if (selectParts.contains(name)) {
-            val index = selectParts.indexOf(name)
-            shows.add(index)
-          }
-        }
-      }
-      val fullScannedRecords = tableMapper.select(selectParts)
-      val satisfiedRecords = arrayListOf<Record>()
-      val compiled = queryCompiler.compileWhere(columns, recipe.whereTree)
-      for (record in fullScannedRecords) {
-        if (compiled.isSatisfied(record)) {
-          satisfiedRecords.add(record)
-        }
-      }
-      val resultMapList = arrayListOf<Map<String, String>>()
-      for(record in satisfiedRecords) {
-        val recordMap = hashMapOf<String, String>()
-        for (i in shows) {
-          val col = columns[i]
-          val cell = record.cells[i]
-
-          recordMap.put(col.name,
-            if (cell.isNull) {
-              ""
-            } else if (cell.type == ColumnType.VARCHAR) {
-              cell.textValue!!
-            } else if (cell.type == ColumnType.NUMBER) {
-              cell.numberValue.toString()
-            } else {
-              cell.intValue!!.toString()
-            }
-          )
-        }
-        resultMapList.add(recordMap)
-      }
-      return resultMapList
-    }
-  }
-
-
-  private fun selectQuery2(session: ClientSession, recipe: SelectInvocationRecipe): List<Map<String, String>> {
+  private fun selectQuery(session: ClientSession, recipe: SelectInvocationRecipe): List<Map<String, String>> {
     val dbInfo = chooseDatabase(session)
     val resultMapList = arrayListOf<Map<String, String>>()
 
@@ -341,11 +261,10 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
             shows.add(i)
           }
         } else {
-          for (i in 0 until columns.size) {
+          for (i in columns.indices) {
             val name = columns[i].name
             if (selectParts.contains(name)) {
-              val index = selectParts.indexOf(name)
-              shows.add(index)
+              shows.add(i)
             }
           }
         }
