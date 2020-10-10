@@ -31,7 +31,7 @@ class DataBaseServer(private var socket: Socket): java.lang.Thread() {
       val len = fromClient.read(buf)
       if (len < 0) break
 
-      println("< " + len)
+      println("< $len")
 
       val query = String(buf, 0, len)
       if (query.trim() == "exit") {
@@ -44,12 +44,12 @@ class DataBaseServer(private var socket: Socket): java.lang.Thread() {
         val syntaxList = tokenizer.parse(tokens)
 
         syntaxList.forEach {syntax ->
-          var startedAt = System.currentTimeMillis()
+          val startedAt = System.currentTimeMillis()
           val result = dbEngine.execute(syntax, session)
-          if (!result.isEmpty()) {
+          if (result.isNotEmpty()) {
             strToClient(result)
 
-            var endedAt = System.currentTimeMillis()
+            val endedAt = System.currentTimeMillis()
             strToClient((endedAt - startedAt).toString() + "ms\n")
           }
         }

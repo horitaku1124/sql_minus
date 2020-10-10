@@ -55,7 +55,7 @@ class Tokenizer {
           index = ret.second
         }
         "select" -> {
-          val ret = parseSelect(tokens, index)
+          val ret = parseSelect2(tokens, index)
           syntax = ret.first
           index = ret.second
         }

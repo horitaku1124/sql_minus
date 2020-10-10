@@ -9,9 +9,12 @@ import com.github.horitaku1124.kotlin.sql_minus.dialect_o.repositories.SingleFil
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.repositories.YamlFileMapper
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.journals.TableJournal
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.*
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.SelectInvocationRecipe.*
+import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.SelectInvocationRecipe.InvocationTask.TaskType.*
 import com.github.horitaku1124.kotlin.sql_minus.utils.StringUtil
 import java.io.File
 import java.nio.file.Files
+import java.util.Stack
 
 /**
  * how to retrieve and update data into file
@@ -31,6 +34,7 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
     val resultBuilder = ExecuteResultBuilder.builder()
       .setStatus(ExecuteResult.ResultStatus.OK)
       .setQueryType(syntax.type)
+
     if (syntax.type == CREATE_DATABASE) {
       val message = createDatabase(session, syntax.subject)
       return resultBuilder.setMessage(message).build()
@@ -77,6 +81,14 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
     if (syntax.type == SELECT_QUERY) {
       val recipe = syntax.recipe.get() as SelectQueryRecipe
       val resultRecords = selectQuery(session, recipe)
+      val mapper = ObjectMapper()
+      // TODO should be Protocol Buffer
+      val json = mapper.writeValueAsString(resultRecords)
+      return resultBuilder.setMessage(json).build()
+    }
+
+    if (syntax.type == SELECT_QUERY2) {
+      val resultRecords = selectQuery2(session, syntax.recipe.get() as SelectInvocationRecipe)
       val mapper = ObjectMapper()
       // TODO should be Protocol Buffer
       val json = mapper.writeValueAsString(resultRecords)
@@ -250,6 +262,118 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
       }
       return resultMapList
     }
+  }
+
+
+  private fun selectQuery2(session: ClientSession, recipe: SelectInvocationRecipe): List<Map<String, String>> {
+    val dbInfo = chooseDatabase(session)
+    val resultMapList = arrayListOf<Map<String, String>>()
+
+    var lastRecords = Stack<HashMap<String, Pair<List<Column>, List<Record>>>>()
+    for (task in recipe.tasks) {
+      if (task.type == TableRead) {
+        val layerRecords = hashMapOf<String, Pair<List<Column>, List<Record>>>()
+
+        val tableRead = task as TableReadTask
+        val tableName = tableRead.tableName
+
+        val table = dbInfo.tables.filter { tb ->
+          tb.name == tableName
+        }.also {
+          if (it.isEmpty()) {
+            throw DBRuntimeException("table doesn't exist -> $tableName")
+          }
+        }.first()
+
+        val tableFile = session.dbPath.resolve(table.fileName).toFile()
+
+        if (!tableFile.exists()) {
+          throw DBRuntimeException("table journal is gone")
+        }
+
+        tableMapper.build(table, tableFile.absolutePath).use { tableMapper ->
+          val columns = tableMapper.columns()
+
+          val records = tableMapper.select(listOf())
+
+          layerRecords.put(tableRead.alias, Pair(columns, records))
+        }
+
+        lastRecords.push(layerRecords)
+      }
+
+      if (task.type == Filtering) {
+        val tableFilter = task as FilteringTask
+        if (lastRecords.isEmpty()) {
+          throw DBRuntimeException("last result was none")
+        }
+        if (tableFilter.wheres.expression.size > 0) {
+          var verifyRecords = lastRecords.pop()
+          var key = verifyRecords.keys.stream().findFirst().get()
+          var columns = verifyRecords[key]!!.first
+          var records = verifyRecords[key]!!.second
+
+          var satisfiedRecords = arrayListOf<Record>()
+
+          val compiled = queryCompiler.compileWhere(columns, tableFilter.wheres)
+          for (record in records) {
+            if (compiled.isSatisfied(record)) {
+              satisfiedRecords.add(record)
+            }
+          }
+          verifyRecords.put(key,Pair(columns, satisfiedRecords))
+          lastRecords.push(verifyRecords)
+        }
+      }
+
+      if (task.type == Selection) {
+        val selectTask = task as SelectionTask
+        var selectParts = selectTask.columns
+
+        var verifyRecords = lastRecords.pop()
+        var key = verifyRecords.keys.stream().findFirst().get()
+        var columns = verifyRecords[key]!!.first
+        var records = verifyRecords[key]!!.second
+
+        val shows = arrayListOf<Int>()
+        if (selectParts.size == 1 && selectParts[0] == "*") {
+          for (i in columns.indices) {
+            shows.add(i)
+          }
+        } else {
+          for (i in 0 until columns.size) {
+            val name = columns[i].name
+            if (selectParts.contains(name)) {
+              val index = selectParts.indexOf(name)
+              shows.add(index)
+            }
+          }
+        }
+
+        for(record in records) {
+          val recordMap = hashMapOf<String, String>()
+          for (i in shows) {
+            val col = columns[i]
+            val cell = record.cells[i]
+
+            recordMap.put(col.name,
+              if (cell.isNull) {
+                ""
+              } else if (cell.type == ColumnType.VARCHAR) {
+                cell.textValue!!
+              } else if (cell.type == ColumnType.NUMBER) {
+                cell.numberValue.toString()
+              } else {
+                cell.intValue!!.toString()
+              }
+            )
+          }
+          resultMapList.add(recordMap)
+        }
+      }
+    }
+
+    return resultMapList
   }
 
   private fun updateQuery(session: ClientSession, recipe: UpdateQueryRecipe): String {

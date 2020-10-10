@@ -8,6 +8,6 @@ class QueryRecipe(var type: QueryType) {
   var recipe: Optional<Recipe> = Optional.empty()
 
   override fun toString(): String {
-    return "${type} -> ${subject}"
+    return "$type -> $subject"
   }
 }
