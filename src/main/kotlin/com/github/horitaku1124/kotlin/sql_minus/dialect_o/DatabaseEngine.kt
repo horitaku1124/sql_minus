@@ -19,7 +19,7 @@ class DatabaseEngine(var tableMapper: SystemTableFileMapperBuilder) {
   private var dbCode = DatabaseEngineCore(tableMapper)
 
   fun execute(
-    syntax: SyntaxTree,
+    syntax: QueryRecipe,
     session: ClientSession
   ): String {
     if (syntax.type == SELECT_QUERY) {

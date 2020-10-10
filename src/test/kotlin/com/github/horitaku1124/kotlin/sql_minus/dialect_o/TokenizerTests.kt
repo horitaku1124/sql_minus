@@ -318,123 +318,23 @@ class TokenizerTests {
   }
 
   @Test
-  fun select1CanBeParsed() {
-    val sql = "select * from tb2"
-    val qp = QueryParser()
+  fun select1CanBeParsed2() {
+    val tokens = listOf("*", "from", "tb2")
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
-      println(tokens)
-      val st = tn.parse(tokens)
-      assertEquals(1, st.size)
-      st[0].let { syntax ->
-        val recipe = syntax.recipe.get() as SelectQueryRecipe
-
-        assertEquals(1, recipe.selectParts.size)
-        assertEquals("*", recipe.selectParts[0])
-        assertEquals(1, recipe.fromParts.size)
-        assertEquals("tb2", recipe.fromParts[0])
-      }
-    }
+    val (queryRecipe, i) = tn.parseSelect(tokens, 0)
+    val selectRecipe = queryRecipe.recipe.get() as SelectInvocationRecipe
+    val tasks = selectRecipe.tasks
+    assertEquals(2, tasks.size)
   }
+
   @Test
-  fun select2CanBeParsed() {
-    val sql = "select id,name from tb3"
-    val qp = QueryParser()
+  fun select2CanBeParsed2() {
+    val tokens = listOf("*", "from", "tb2", "where", "id", "=", "1")
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
-      println(tokens)
-      val st = tn.parse(tokens)
-      assertEquals(1, st.size)
-      st[0].let { syntax ->
-        val recipe = syntax.recipe.get() as SelectQueryRecipe
-
-        assertEquals(2, recipe.selectParts.size)
-        assertEquals("id", recipe.selectParts[0])
-        assertEquals("name", recipe.selectParts[1])
-        assertEquals(1, recipe.fromParts.size)
-        assertEquals("tb3", recipe.fromParts[0])
-      }
-    }
-  }
-  @Test
-  fun select3CanBeParsed() {
-    val sql = "select id,name from tb3 where status = 1"
-    val qp = QueryParser()
-    val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
-      println(tokens)
-      val st = tn.parse(tokens)
-      assertEquals(1, st.size)
-      st[0].let { syntax ->
-        val recipe = syntax.recipe.get() as SelectQueryRecipe
-
-        assertEquals(2, recipe.selectParts.size)
-        assertEquals("id", recipe.selectParts[0])
-        assertEquals("name", recipe.selectParts[1])
-        assertEquals(1, recipe.fromParts.size)
-        assertEquals("tb3", recipe.fromParts[0])
-        assertEquals(3, recipe.whereTree.expression.size)
-        assertEquals("status", recipe.whereTree.expression[0])
-        assertEquals("=", recipe.whereTree.expression[1])
-        assertEquals("1", recipe.whereTree.expression[2])
-      }
-    }
-  }
-  @Test
-  fun select4CanBeParsed() {
-    val sql = "select id,name from tb3 where status = 1 and age > 10"
-    val qp = QueryParser()
-    val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
-      println(tokens)
-      val st = tn.parse(tokens)
-      assertEquals(1, st.size)
-      st[0].let { syntax ->
-        val recipe = syntax.recipe.get() as SelectQueryRecipe
-
-        assertEquals(2, recipe.selectParts.size)
-        assertEquals("id", recipe.selectParts[0])
-        assertEquals("name", recipe.selectParts[1])
-        assertEquals(1, recipe.fromParts.size)
-        assertEquals("tb3", recipe.fromParts[0])
-        assertEquals(7, recipe.whereTree.expression.size)
-        recipe.whereTree.expression.let { exp ->
-          assertEquals("status", exp[0])
-          assertEquals("=", exp[1])
-          assertEquals("1", exp[2])
-          assertEquals("and", exp[3])
-          assertEquals("age", exp[4])
-          assertEquals(">", exp[5])
-          assertEquals("10", exp[6])
-        }
-      }
-    }
-  }
-  @Test
-  fun select5CanBeParsed() {
-    val sql = "select * from tb3 where name is null"
-
-    val qp = QueryParser()
-    val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
-      println(tokens)
-      val st = tn.parse(tokens)
-      assertEquals(1, st.size)
-      st[0].let { syntax ->
-        val recipe = syntax.recipe.get() as SelectQueryRecipe
-
-        assertEquals(1, recipe.selectParts.size)
-        assertEquals("*", recipe.selectParts[0])
-        assertEquals(1, recipe.fromParts.size)
-        assertEquals("tb3", recipe.fromParts[0])
-        assertEquals(3, recipe.whereTree.expression.size)
-        recipe.whereTree.expression.let { exp ->
-          assertEquals("name", exp[0])
-          assertEquals("is", exp[1])
-          assertEquals("null", exp[2])
-        }
-      }
-    }
+    val (queryRecipe, i) = tn.parseSelect(tokens, 0)
+    val selectRecipe = queryRecipe.recipe.get() as SelectInvocationRecipe
+    val tasks = selectRecipe.tasks
+    assertEquals(3, tasks.size)
   }
 
   @Test
