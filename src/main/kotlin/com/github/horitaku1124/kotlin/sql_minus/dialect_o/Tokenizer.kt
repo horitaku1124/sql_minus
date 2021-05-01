@@ -258,7 +258,7 @@ class Tokenizer {
     return Pair(syntax, index)
   }
 
-  public fun parseSelect(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int>  {
+  fun parseSelect(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int>  {
     val syntax = QueryRecipe(SELECT_QUERY)
     var recipe = SelectInvocationRecipe()
 
