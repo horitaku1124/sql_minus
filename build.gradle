@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.5.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.5.10'
 }
 
 group 'com.github.horitaku1124.kotlin'
@@ -19,7 +19,7 @@ dependencies {
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.10.0'
 
     // Might using "Reflection"
-    implementation "com.google.protobuf:protobuf-java:3.17.0"
+    implementation "com.google.protobuf:protobuf-java:3.17.1"
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
 }
 test {
