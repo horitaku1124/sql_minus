@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.6.20'
+    id 'org.jetbrains.kotlin.jvm' version '1.7.10'
 }
 
 group 'com.github.horitaku1124.kotlin'
@@ -10,6 +10,7 @@ repositories {
     mavenCentral()
 }
 jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 dependencies {
