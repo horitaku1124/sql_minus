@@ -3,14 +3,15 @@ package com.github.horitaku1124.kotlin.sql_minus.dialect_o
 import com.github.horitaku1124.kotlin.sql_minus.DBRuntimeException
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.WhereRecipes
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.recipes.WhereVerifyGate
+import java.util.*
 import java.util.function.Predicate
 
 class QueryCompiler {
   fun compileWhere(columns: List<Column>, recipe: WhereRecipes): WhereVerifyGate {
     if (recipe.expression.size == 0) {
-      return WhereVerifyGate(Predicate<Record> {
+      return WhereVerifyGate {
         true
-      })
+      }
     }
 
     var compiled:WhereVerifyGate? = null
@@ -19,12 +20,12 @@ class QueryCompiler {
     var isAnd = true
     while (index < recipe.expression.size) {
       val colName = recipe.expression[index]
-      if (colName.toLowerCase() == "and") {
+      if (colName.lowercase(Locale.getDefault()) == "and") {
         isAnd = true
         index++
       } else if ((recipe.expression.size - index) >= 3) {
         var colIndex = -1
-        for (i in 0 until columns.size) {
+        for (i in columns.indices) {
           if (columns[i].name == colName) {
             colIndex = i
             break

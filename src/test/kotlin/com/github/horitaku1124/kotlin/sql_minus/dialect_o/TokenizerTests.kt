@@ -321,7 +321,7 @@ class TokenizerTests {
   fun select1CanBeParsed2() {
     val tokens = listOf("*", "from", "tb2")
     val tn = Tokenizer()
-    val (queryRecipe, i) = tn.parseSelect(tokens, 0)
+    val (queryRecipe, _) = tn.parseSelect(tokens, 0)
     val selectRecipe = queryRecipe.recipe.get() as SelectInvocationRecipe
     val tasks = selectRecipe.tasks
     assertEquals(2, tasks.size)
@@ -331,7 +331,7 @@ class TokenizerTests {
   fun select2CanBeParsed2() {
     val tokens = listOf("*", "from", "tb2", "where", "id", "=", "1")
     val tn = Tokenizer()
-    val (queryRecipe, i) = tn.parseSelect(tokens, 0)
+    val (queryRecipe, _) = tn.parseSelect(tokens, 0)
     val selectRecipe = queryRecipe.recipe.get() as SelectInvocationRecipe
     val tasks = selectRecipe.tasks
     assertEquals(3, tasks.size)

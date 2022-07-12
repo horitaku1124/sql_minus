@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 
 class BTree23Tests {
   @Test
-  fun intComparetor() {
+  fun intComparator() {
     val compare: (Int, Int) -> Int = { left, right ->  left - right   }
 
     assertEquals(-1, compare(1,2))
@@ -80,8 +80,8 @@ class BTree23Tests {
         left, right ->  left.first - right.first
     }
     val root = BTree23(compare)
-    var val1 = Pair(1, "A")
-    var look1 = Pair(1, null)
+    val val1 = Pair(1, "A")
+    val look1 = Pair(1, null)
     assertEquals(false, root.contains(look1))
     root.insert(val1)
     assertEquals(true, root.contains(look1))
