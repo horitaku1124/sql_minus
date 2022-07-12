@@ -32,7 +32,7 @@ class DBRpcServer(private var socket: Socket): java.lang.Thread() {
       println("query2=" + parseFrom.query)
 
       try {
-        val tokens = queryParser.lexicalAnalysis(parseFrom.query)
+        val tokens = queryParser.lexicalAnalysisAndLigature(parseFrom.query)
         val syntaxList = tokenizer.parse(tokens)
 
         syntaxList.forEach {syntax ->

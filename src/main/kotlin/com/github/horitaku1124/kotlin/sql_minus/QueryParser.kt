@@ -83,4 +83,26 @@ class QueryParser {
     }
     return verseList
   }
+
+  fun lexicalAnalysisAndLigature(query: String): List<String> {
+    val tokens = lexicalAnalysis(query)
+    val resultTokens = arrayListOf<String>()
+
+    var index = 0
+    while (index < tokens.size) {
+      val token = tokens[index++]
+      if (token == "<") {
+        val token2 = if (index < tokens.size) tokens[index] else ""
+        if (token2 == ">") {
+          resultTokens.add("<>")
+          index++
+        } else {
+          resultTokens.add(token)
+        }
+      } else {
+        resultTokens.add(token)
+      }
+    }
+    return resultTokens
+  }
 }
