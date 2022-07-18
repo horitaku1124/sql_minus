@@ -14,6 +14,7 @@ SQL Minus
 ### Run
 
 ```bash
+mkdir db_files
 java -jar build/libs/*.jar 8001
 ```
 

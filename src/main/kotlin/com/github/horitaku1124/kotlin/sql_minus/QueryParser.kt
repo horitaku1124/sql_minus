@@ -2,7 +2,7 @@ package com.github.horitaku1124.kotlin.sql_minus
 
 class QueryParser {
   private val symbols = listOf('+', '-', '/', '*', '=','<', '>')
-  fun lexicalAnalysis(query: String): List<String> {
+  private fun lexicalAnalysis(query: String): List<String> {
     val verseList = arrayListOf<String>()
     var verse = ""
     var quote: Char? = null

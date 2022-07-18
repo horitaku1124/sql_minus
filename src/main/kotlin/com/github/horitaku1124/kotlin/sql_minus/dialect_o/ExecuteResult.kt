@@ -9,6 +9,7 @@ class ExecuteResult {
   lateinit var status: ResultStatus
   lateinit var message: String
   lateinit var queryType: QueryType
+  lateinit var resultData: List<Map<String, String>>
 
   object ExecuteResultBuilder {
     fun builder(): ExecuteResultObject{
@@ -26,6 +27,7 @@ class ExecuteResult {
     private var status: ResultStatus? = null
     private var message: String? = null
     private var queryType: QueryType? = null
+    private var resultData: List<Map<String, String>>? = null
     fun setStatus(status: ResultStatus): ExecuteResultObject{
       this.status = status
       return this
@@ -38,9 +40,13 @@ class ExecuteResult {
       this.queryType = queryType
       return this
     }
+    fun setResultData(resultData: List<Map<String, String>>): ExecuteResultObject{
+      this.resultData = resultData
+      return this
+    }
 
     fun build(): ExecuteResult{
-      var result = ExecuteResult()
+      val result = ExecuteResult()
       if (status != null) {
         result.status = status!!
       }
@@ -49,6 +55,9 @@ class ExecuteResult {
       }
       if (queryType != null) {
         result.queryType = queryType!!
+      }
+      if (resultData != null) {
+        result.resultData = resultData!!
       }
       return result
     }

@@ -5,7 +5,7 @@ import com.github.horitaku1124.kotlin.sql_minus_driver.protos.ExecQueryProtos
 import com.github.horitaku1124.kotlin.sql_minus_driver.protos.ExecResultProtos
 import java.net.Socket
 
-class DBRpcServer(private var socket: Socket): java.lang.Thread() {
+class DBRpcServer(private var socket: Socket): Thread() {
   companion object {
     private var dbEngine: DatabaseEngineCore
     init {

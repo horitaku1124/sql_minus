@@ -12,7 +12,7 @@ class TokenizerTests {
     val qp = QueryParser()
     val tn = Tokenizer()
 
-    qp.lexicalAnalysis("create database db1;").let { tokens ->
+    qp.lexicalAnalysisAndLigature("create database db1;").let { tokens ->
       val st = tn.parse(tokens)
       assertEquals(1, st.size)
 
@@ -26,7 +26,7 @@ class TokenizerTests {
   fun connectCanBeParsed() {
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis("connect db2").let { tokens ->
+    qp.lexicalAnalysisAndLigature("connect db2").let { tokens ->
       val st = tn.parse(tokens)
       assertEquals(1, st.size)
 
@@ -45,7 +45,7 @@ class TokenizerTests {
     """.trimIndent()
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
+    qp.lexicalAnalysisAndLigature(sql).let { tokens ->
       println(tokens)
       val st = tn.parse(tokens)
       println(st)
@@ -78,7 +78,7 @@ class TokenizerTests {
     """.trimIndent()
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
+    qp.lexicalAnalysisAndLigature(sql).let { tokens ->
       println(tokens)
       val st = tn.parse(tokens)
       println(st)
@@ -123,7 +123,7 @@ class TokenizerTests {
     """.trimIndent()
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
+    qp.lexicalAnalysisAndLigature(sql).let { tokens ->
       println(tokens)
       val st = tn.parse(tokens)
       println(st)
@@ -158,7 +158,7 @@ class TokenizerTests {
 
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
+    qp.lexicalAnalysisAndLigature(sql).let { tokens ->
       println(tokens)
       val st = tn.parse(tokens)
 
@@ -187,7 +187,7 @@ class TokenizerTests {
 
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
+    qp.lexicalAnalysisAndLigature(sql).let { tokens ->
       println(tokens)
       val st = tn.parse(tokens)
 
@@ -218,7 +218,7 @@ class TokenizerTests {
 
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
+    qp.lexicalAnalysisAndLigature(sql).let { tokens ->
       println(tokens)
       val st = tn.parse(tokens)
 
@@ -244,7 +244,7 @@ class TokenizerTests {
 
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
+    qp.lexicalAnalysisAndLigature(sql).let { tokens ->
       println(tokens)
       val st = tn.parse(tokens)
 
@@ -271,7 +271,7 @@ class TokenizerTests {
     val sql = "insert into tb3(price1,price2) values (123,123.567)"
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
+    qp.lexicalAnalysisAndLigature(sql).let { tokens ->
       val st = tn.parse(tokens)
       assertEquals(1, st.size)
       st[0].let { syntax ->
@@ -295,7 +295,7 @@ class TokenizerTests {
     val sql = "insert into tb3(id,created_at,updated_at) values (1, timestamp '2020-10-31 12:45:32', date '1951-09-22');"
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
+    qp.lexicalAnalysisAndLigature(sql).let { tokens ->
       println(tokens)
       val st = tn.parse(tokens)
       assertEquals(1, st.size)
@@ -342,7 +342,7 @@ class TokenizerTests {
     val sql = "update tb3 set status = 3 where status = 1"
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
+    qp.lexicalAnalysisAndLigature(sql).let { tokens ->
       println(tokens)
       val st = tn.parse(tokens)
       assertEquals(1, st.size)
@@ -358,7 +358,7 @@ class TokenizerTests {
     val sql = "delete from tb1 where status = 1"
     val qp = QueryParser()
     val tn = Tokenizer()
-    qp.lexicalAnalysis(sql).let { tokens ->
+    qp.lexicalAnalysisAndLigature(sql).let { tokens ->
       println(tokens)
       val st = tn.parse(tokens)
       assertEquals(1, st.size)

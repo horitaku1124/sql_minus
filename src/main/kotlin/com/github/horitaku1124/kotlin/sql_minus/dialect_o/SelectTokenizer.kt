@@ -45,7 +45,7 @@ class SelectTokenizer {
         if (nextOfSubject == ",") {
           children.add(Node(NodeType.VALUE, value = subject))
           index++
-        } else if (reservedName.contains(nextOfSubject.toLowerCase())) {
+        } else if (reservedName.contains(nextOfSubject.lowercase(Locale.getDefault()))) {
           children.add(Node(NodeType.VALUE, value = subject))
           parentNode.property["from"] = children
           children = arrayListOf()
@@ -73,7 +73,7 @@ class SelectTokenizer {
         continue
       }
 
-      when (token.toLowerCase()) {
+      when (token.lowercase(Locale.getDefault())) {
         "select" -> {
           amI = WhereAmI.SELECT
           children.add(Node(NodeType.VALUE, value = tokens[index++]))

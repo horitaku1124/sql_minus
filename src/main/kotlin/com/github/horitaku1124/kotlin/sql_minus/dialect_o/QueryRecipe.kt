@@ -4,7 +4,7 @@ import com.github.horitaku1124.kotlin.sql_minus.Recipe
 import java.util.*
 
 class QueryRecipe(var type: QueryType) {
-  lateinit var subject: String
+  var subject: String = "NULL"
   var recipe: Optional<Recipe> = Optional.empty()
 
   override fun toString(): String {

@@ -43,7 +43,7 @@ open class TableFileMapper(private var tableJournal: TableJournal,
 
   private fun recordToBinary(map: HashMap<String, RecordCell>): ByteBuffer {
     val recordBuffer = ByteBuffer.allocate(RecordLength)
-    var nullColumns = Array(tableJournal.columns.size) { true } // `true` means NULL
+    val nullColumns = Array(tableJournal.columns.size) { true } // `true` means NULL
 
     for (i in tableJournal.columns.indices) {
       val col = tableJournal.columns[i]
@@ -51,8 +51,8 @@ open class TableFileMapper(private var tableJournal: TableJournal,
         nullColumns[i] = false
       }
     }
-    var bb = BinaryBuffer(nullColumns)
-    var nullFlags = bb.toBytes()
+    val bb = BinaryBuffer(nullColumns)
+    val nullFlags = bb.toBytes()
 
     recordBuffer.put(0x7F).put(0x0F)
     recordBuffer.put(nullFlags)
@@ -157,7 +157,7 @@ open class TableFileMapper(private var tableJournal: TableJournal,
         var deleted = false
         val recordBuff = ByteBuffer.wrap(buf).also {
           var b0 = it.get().toInt()
-          var b1 = it.get().toInt()
+          val b1 = it.get().toInt()
           if (b1 == 0b01) {
             deleted = true
           }
@@ -169,12 +169,12 @@ open class TableFileMapper(private var tableJournal: TableJournal,
         val record = Record()
         record.position = filePosition
 
-        var nullFlagsByte = ByteArray(NullFlagsLength)
+        val nullFlagsByte = ByteArray(NullFlagsLength)
         recordBuff.get(nullFlagsByte)
-        var nullFlags = BinaryBuffer.loadFrom(nullFlagsByte, tableJournal.columns.size)
+        val nullFlags = BinaryBuffer.loadFrom(nullFlagsByte, tableJournal.columns.size)
 
         for (colNum in tableJournal.columns.indices) {
-          var col = tableJournal.columns[colNum]
+          val col = tableJournal.columns[colNum]
 
           val cell: RecordCell
 

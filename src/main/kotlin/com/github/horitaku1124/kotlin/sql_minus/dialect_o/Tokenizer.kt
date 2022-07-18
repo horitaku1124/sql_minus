@@ -14,11 +14,11 @@ class Tokenizer {
 
     var index = 0
     while (index < tokens.size) {
-      val startToken = tokens[index++].toLowerCase()
+      val startToken = tokens[index++].lowercase(Locale.getDefault())
       var syntax: QueryRecipe
       when (startToken) {
         "create" -> {
-          when (val objective = tokens[index++].toLowerCase()) {
+          when (val objective = tokens[index++].lowercase(Locale.getDefault())) {
             "database" -> {
               syntax = QueryRecipe(CREATE_DATABASE)
               val subject = tokens[index++]
@@ -36,17 +36,17 @@ class Tokenizer {
         }
         "connect" -> {
           syntax = QueryRecipe(CHANGE_DATABASE)
-          syntax.subject = tokens[index++].toLowerCase()
+          syntax.subject = tokens[index++].lowercase(Locale.getDefault())
         }
         "show" -> {
-          val objective = tokens[index++].toLowerCase()
+          val objective = tokens[index++].lowercase(Locale.getDefault())
           if (objective != "tables") {
             throw DBRuntimeException("unrecognized command => $objective")
           }
           syntax = QueryRecipe(SHOW_TABLES)
         }
         "insert" -> {
-          val objective = tokens[index++].toLowerCase()
+          val objective = tokens[index++].lowercase(Locale.getDefault())
           if (objective != "into") {
             throw DBRuntimeException("unrecognized command => $objective")
           }
@@ -60,7 +60,7 @@ class Tokenizer {
           index = ret.second
         }
         "drop" -> {
-          val objective = tokens[index++].toLowerCase()
+          val objective = tokens[index++].lowercase(Locale.getDefault())
           if (objective == "table") {
             syntax = QueryRecipe(DROP_TABLE)
             val subject = tokens[index++]
@@ -133,7 +133,7 @@ class Tokenizer {
       }
       val col = Column()
       col.name = columnParts[0]
-      val type = columnParts[1].toLowerCase()
+      val type = columnParts[1].lowercase(Locale.getDefault())
       when (type) {
         "int" -> {
           col.type = ColumnType.INT
@@ -228,8 +228,8 @@ class Tokenizer {
 
         if (value.startsWith("'")) {
           record.cells.add(RecordCell(ColumnType.VARCHAR, value.substring(1, value.length - 1)))
-        } else if (typeAnnotations.contains(value.toLowerCase())) {
-          val annotation = value.toLowerCase()
+        } else if (typeAnnotations.contains(value.lowercase(Locale.getDefault()))) {
+          val annotation = value.lowercase(Locale.getDefault())
           val value2 = tokens[index++]
           if (value2.startsWith("'")) {
             val strValue = value2.substring(1, value2.length - 1)
@@ -260,10 +260,10 @@ class Tokenizer {
 
   fun parseSelect(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int>  {
     val syntax = QueryRecipe(SELECT_QUERY)
-    var recipe = SelectInvocationRecipe()
+    val recipe = SelectInvocationRecipe()
 
     var index = startIndex
-    var selectParts = arrayListOf<String>()
+    val selectParts = arrayListOf<String>()
     var token = tokens[index++]
     var nextToken: String? = null
     while (index < tokens.size) {
@@ -276,32 +276,32 @@ class Tokenizer {
       nextToken = next
       break
     }
-    if (nextToken == null || nextToken.toLowerCase() != "from") {
+    if (nextToken == null || nextToken.lowercase(Locale.getDefault()) != "from") {
       throw DBRuntimeException("no from syntax")
     }
     val fromParts = arrayListOf<String>()
     fromParts.add(tokens[index++])
 
 
-    var whereTree = WhereRecipes()
+    val whereTree = WhereRecipes()
     while (index < tokens.size) {
       var remainNum = tokens.size - index
       if (remainNum > 0) {
         nextToken = tokens[index++]
-        if (nextToken.toLowerCase() == "where") {
+        if (nextToken.lowercase(Locale.getDefault()) == "where") {
           remainNum--
-          while(remainNum > 0) {
+          while (remainNum > 0) {
             if (remainNum > 2) {
-              var subject = tokens[index++]
-              var operator = tokens[index++]
-              var objective = tokens[index++]
+              val subject = tokens[index++]
+              val operator = tokens[index++]
+              val objective = tokens[index++]
               remainNum = remainNum - 3
               whereTree.expression.add(subject)
               whereTree.expression.add(operator)
               whereTree.expression.add(objective)
 
               if (remainNum > 0) {
-                nextToken = tokens[index++].toLowerCase()
+                nextToken = tokens[index++].lowercase(Locale.getDefault())
                 remainNum--
                 if (nextToken == "and" || nextToken == "or") {
                   whereTree.expression.add(nextToken)
@@ -330,7 +330,7 @@ class Tokenizer {
   }
 
   private fun parseUpdate(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int> {
-    var recipe = UpdateQueryRecipe()
+    val recipe = UpdateQueryRecipe()
     var index = startIndex
     val syntax = QueryRecipe(UPDATE_QUERY)
     recipe.targetTable = tokens[index++]
@@ -340,17 +340,17 @@ class Tokenizer {
     }
 
     while (index < tokens.size) {
-      var token = tokens[index++]
+      val token = tokens[index++]
       if (token == ",") {
         continue
       }
       if (token == "where") {
         break
       }
-      var subject = token
-      var ope = tokens[index++]
-      var objective = tokens[index++]
-      var upd = UpdatesRecipe()
+      val subject = token
+      val ope = tokens[index++]
+      val objective = tokens[index++]
+      val upd = UpdatesRecipe()
       upd.expression.add(subject)
       upd.expression.add(ope)
       upd.expression.add(objective)
@@ -359,11 +359,11 @@ class Tokenizer {
     }
 
     while (index < tokens.size) {
-      var subject = tokens[index++]
-      var ope = tokens[index++]
-      var objective = tokens[index++]
+      val subject = tokens[index++]
+      val ope = tokens[index++]
+      val objective = tokens[index++]
 
-      var where = WhereRecipes()
+      val where = WhereRecipes()
       where.expression.add(subject)
       where.expression.add(ope)
       where.expression.add(objective)
@@ -376,10 +376,10 @@ class Tokenizer {
   }
 
   private fun parseDelete(tokens: List<String>, startIndex: Int): Pair<QueryRecipe, Int> {
-    var recipe = DeleteQueryRecipe()
+    val recipe = DeleteQueryRecipe()
     var index = startIndex
     val syntax = QueryRecipe(DELETE_QUERY)
-    if (tokens[index++].toLowerCase() != "from") {
+    if (tokens[index++].lowercase(Locale.getDefault()) != "from") {
       throw DBRuntimeException("error => " + (tokens[index - 1]))
     }
     recipe.targetTable = tokens[index++]
@@ -387,15 +387,15 @@ class Tokenizer {
     if (index >= tokens.size) {
       return Pair(syntax, index)
     }
-    if (tokens[index++].toLowerCase() != "where") {
+    if (tokens[index++].lowercase(Locale.getDefault()) != "where") {
       throw DBRuntimeException("error => " + (tokens[index - 1]))
     }
     while (index < tokens.size) {
-      var subject = tokens[index++]
-      var ope = tokens[index++]
-      var objective = tokens[index++]
+      val subject = tokens[index++]
+      val ope = tokens[index++]
+      val objective = tokens[index++]
 
-      var where = WhereRecipes()
+      val where = WhereRecipes()
       where.expression.add(subject)
       where.expression.add(ope)
       where.expression.add(objective)

@@ -8,26 +8,26 @@ class QueryParserTests {
   fun basicQueryCanBeParsed() {
     val qp = QueryParser()
 
-    qp.lexicalAnalysis("select * from table").let { tokens ->
+    qp.lexicalAnalysisAndLigature("select * from table").let { tokens ->
       assertEquals(4, tokens.size)
       assertEquals("select", tokens[0])
       assertEquals("*", tokens[1])
       assertEquals("from", tokens[2])
       assertEquals("table", tokens[3])
     }
-    qp.lexicalAnalysis("insert into table").let { tokens ->
+    qp.lexicalAnalysisAndLigature("insert into table").let { tokens ->
       assertEquals(3, tokens.size)
       assertEquals("insert", tokens[0])
       assertEquals("into", tokens[1])
       assertEquals("table", tokens[2])
     }
-    qp.lexicalAnalysis("update table set").let { tokens ->
+    qp.lexicalAnalysisAndLigature("update table set").let { tokens ->
       assertEquals(3, tokens.size)
       assertEquals("update", tokens[0])
       assertEquals("table", tokens[1])
       assertEquals("set", tokens[2])
     }
-    qp.lexicalAnalysis("delete from table").let { tokens ->
+    qp.lexicalAnalysisAndLigature("delete from table").let { tokens ->
       assertEquals(3, tokens.size)
       assertEquals("delete", tokens[0])
       assertEquals("from", tokens[1])

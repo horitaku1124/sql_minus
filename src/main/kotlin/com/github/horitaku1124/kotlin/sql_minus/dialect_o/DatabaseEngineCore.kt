@@ -81,10 +81,13 @@ class DatabaseEngineCore(var tableMapper: SystemTableFileMapperBuilder) {
     if (syntax.type == SELECT_QUERY) {
       val recipe = syntax.recipe.get() as SelectInvocationRecipe
       val resultRecords = selectQuery(session, recipe)
-      val mapper = ObjectMapper()
+//      val mapper = ObjectMapper()
       // TODO should be Protocol Buffer
-      val json = mapper.writeValueAsString(resultRecords)
-      return resultBuilder.setMessage(json).build()
+//      val json = mapper.writeValueAsString(resultRecords)
+      return resultBuilder
+        .setMessage(resultRecords.size.toString() + " records selected")
+        .setResultData(resultRecords)
+        .build()
     }
 
     return ExecuteResultBuilder.errorCase()
