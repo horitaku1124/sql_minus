@@ -20,7 +20,7 @@ dependencies {
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.8.1'
 
     // Might using "Reflection"
-    implementation "com.google.protobuf:protobuf-java:3.21.9"
+    implementation "com.google.protobuf:protobuf-java:3.21.11"
 //    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
 }
 test {
