@@ -2,7 +2,7 @@ package com.github.horitaku1124.kotlin.sql_minus.utils
 
 import java.util.*
 
-class BTree23<T> (var comparator: (T, T) -> Int) {
+class BTree23<T : Any> (var comparator: (T, T) -> Int) {
   var values = arrayListOf<T>()
 
   var left: BTree23<T>? = null
@@ -15,7 +15,7 @@ class BTree23<T> (var comparator: (T, T) -> Int) {
       return
     }
     if (values.size == 1) {
-      var diff = comparator(values[0], value)
+      val diff = comparator(values[0], value)
       if (diff < 0) {
         values.add(value)
       } else if (diff > 0) {
@@ -24,7 +24,7 @@ class BTree23<T> (var comparator: (T, T) -> Int) {
       return
     }
     if (values.size == 2) {
-      var diff = comparator(values[0], value)
+      val diff = comparator(values[0], value)
       if (diff > 0) {
         if (left == null) {
           left = BTree23(comparator)
@@ -34,7 +34,7 @@ class BTree23<T> (var comparator: (T, T) -> Int) {
       } else if (diff == 0) {
         return
       }
-      var diff2 = comparator(value, values[1])
+      val diff2 = comparator(value, values[1])
       if (diff2 < 0) {
         if (middle == null) {
           middle = BTree23(comparator)
@@ -78,7 +78,7 @@ class BTree23<T> (var comparator: (T, T) -> Int) {
     }
     return false
   }
-  fun findObj(value: T): Optional<T> {
+  fun findObj(value: T): Optional<out T> {
     if (values.size == 0) return Optional.empty()
     if (values.size == 1) {
       if(comparator(value, values[0]) == 0) {
