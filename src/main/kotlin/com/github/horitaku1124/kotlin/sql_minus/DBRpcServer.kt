@@ -1,5 +1,6 @@
 package com.github.horitaku1124.kotlin.sql_minus
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.horitaku1124.kotlin.sql_minus.dialect_o.*
 import com.github.horitaku1124.kotlin.sql_minus_driver.protos.ExecQueryProtos
 import com.github.horitaku1124.kotlin.sql_minus_driver.protos.ExecResultProtos
@@ -24,7 +25,7 @@ class DBRpcServer(private var socket: Socket): Thread() {
     while(socket.isConnected && !socket.isClosed) {
       val len = fromClient.read(buf)
       if (len < 0) break
-      var newBuf = buf.copyOf(len)
+      val newBuf = buf.copyOf(len)
 
       println("< " + len)
       val parseFrom = ExecQueryProtos.Query.parseFrom(newBuf)
@@ -38,9 +39,13 @@ class DBRpcServer(private var socket: Socket): Thread() {
         syntaxList.forEach {syntax ->
           val result = dbEngine.execute(syntax, session)
 
+          val body = if (result.queryType != QueryType.SELECT_QUERY) result.message else {
+            val mapper = ObjectMapper()
+            mapper.writeValueAsString(result.resultData)
+          }
           val resultProtos = ExecResultProtos.Result.newBuilder()
             .setStatus(if (result.status == ExecuteResult.ResultStatus.OK) 1 else 2)
-            .setBody(result.message)
+            .setBody(body)
             .build()
           val resultBytes = resultProtos.toByteArray()
           toLClient.write(resultBytes)
