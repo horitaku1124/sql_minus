@@ -211,7 +211,7 @@ class Tokenizer {
       columns.add(token)
     }
     if (tokens[index++] != "values") {
-      throw DBRuntimeException("error")
+      throw DBRuntimeException("unrecognized token:" + tokens[index])
     }
 
     val records = arrayListOf<Record>()
