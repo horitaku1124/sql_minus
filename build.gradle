@@ -16,7 +16,7 @@ jar {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.11.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.11.1'
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '5.14.1'
 
     // Might using "Reflection"
