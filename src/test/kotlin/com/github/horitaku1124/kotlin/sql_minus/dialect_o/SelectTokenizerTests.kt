@@ -107,4 +107,14 @@ class SelectTokenizerTests {
       assertEquals("1", children[2].value)
     }
   }
+  @Test
+  fun selectGroupCanBeParsed() {
+    val tokens = listOf(
+      "select", "count", "(", "id", ")", "from", "tb1", "group", "by", "code"
+    )
+    val tn = SelectTokenizer()
+    val (selectRecipe, i) = tn.parseSelect(tokens, 0)
+
+    println(selectRecipe)
+  }
 }

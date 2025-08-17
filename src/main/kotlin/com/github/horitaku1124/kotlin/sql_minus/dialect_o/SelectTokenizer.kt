@@ -15,10 +15,10 @@ class SelectTokenizer {
   }
 
   enum class WhereAmI {
-    SELECT, FROM, WHERE, NONE
+    SELECT, FROM, WHERE, GROUP_BY, NONE
   }
 
-  private val reservedName = listOf("select", "from", "where")
+  private val reservedName = listOf("select", "from", "where", "group")
   private val compareOperators = listOf("=", ">", "<", "in", "<>")
 
   private fun parseLayer1(tokens: List<String>, startIndex: Int): Pair<Node, Int> {
@@ -83,6 +83,14 @@ class SelectTokenizer {
         }
         "where" -> {
           amI = WhereAmI.WHERE
+        }
+        "group" -> {
+          if (tokens[index] == "by") {
+            index++
+            amI = WhereAmI.GROUP_BY
+          } else {
+            throw RuntimeException("group [" + tokens[index] + "] is not recognized")
+          }
         }
       }
     }

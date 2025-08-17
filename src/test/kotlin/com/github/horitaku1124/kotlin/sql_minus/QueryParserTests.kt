@@ -87,6 +87,24 @@ class QueryParserTests {
     }
   }
   @Test
+  fun selectGroup() {
+    val qp = QueryParser()
+    qp.lexicalAnalysisAndLigature("select count(id) from tb1 group by code").let { tokens ->
+      println(tokens)
+      assertEquals(10, tokens.size)
+      assertEquals("select", tokens[0])
+      assertEquals("count", tokens[1])
+      assertEquals("(", tokens[2])
+      assertEquals("id", tokens[3])
+      assertEquals(")", tokens[4])
+      assertEquals("from", tokens[5])
+      assertEquals("tb1", tokens[6])
+      assertEquals("group", tokens[7])
+      assertEquals("by", tokens[8])
+      assertEquals("code", tokens[9])
+    }
+  }
+  @Test
   fun basicInsertCanBeParsed() {
     val qp = QueryParser()
     qp.lexicalAnalysisAndLigature("insert into table1(val1,val2,val3) values ('123','456','789')").let { tokens ->

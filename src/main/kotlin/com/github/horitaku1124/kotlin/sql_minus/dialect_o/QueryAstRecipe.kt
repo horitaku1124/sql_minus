@@ -9,6 +9,6 @@ class QueryAstRecipe(var type: QueryType) {
   var syntaxTree: Optional<Node> = Optional.empty()
 
   override fun toString(): String {
-    return "$type -> ?"
+    return "$type -> Recipe=$recipe syntaxTree=$syntaxTree"
   }
 }
